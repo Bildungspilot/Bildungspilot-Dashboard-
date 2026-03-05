@@ -1,802 +1,1612 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nachhilfe Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8fafc;
-        }
-        .modal {
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .fade-in {
-            animation: fadeIn 0.3s ease forwards;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .btn-primary {
-            @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200;
-        }
-        .btn-secondary {
-            @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-200;
-        }
-        .card {
-            @apply bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg;
-        }
-        .input {
-            @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
-        }
-        .select {
-            @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nachhilfe Dashboard</title>
+
+  <!-- Tailwind (Play CDN). Note: Play CDN is intended for development, not production. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #f8fafc;
+    }
+    .modal {
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Replace Tailwind @apply helpers with plain CSS so it works on static hosting */
+    .btn-primary {
+      background-color: #4f46e5; /* indigo-600 */
+      color: #ffffff;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      transition: background-color 200ms ease, transform 200ms ease;
+    }
+    .btn-primary:hover { background-color: #4338ca; } /* indigo-700 */
+    .btn-primary:active { transform: translateY(1px); }
+
+    .btn-secondary {
+      background-color: #e5e7eb; /* gray-200 */
+      color: #1f2937; /* gray-800 */
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      transition: background-color 200ms ease, transform 200ms ease;
+    }
+    .btn-secondary:hover { background-color: #d1d5db; } /* gray-300 */
+    .btn-secondary:active { transform: translateY(1px); }
+
+    .btn-danger {
+      background-color: #ef4444; /* red-500 */
+      color: #ffffff;
+      font-weight: 500;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      transition: background-color 200ms ease, transform 200ms ease;
+    }
+    .btn-danger:hover { background-color: #dc2626; } /* red-600 */
+    .btn-danger:active { transform: translateY(1px); }
+
+    .card {
+      background-color: #ffffff;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.08);
+      padding: 1.5rem;
+      transition: box-shadow 300ms ease, transform 300ms ease;
+    }
+    .card:hover {
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.10), 0 8px 10px -6px rgba(0,0,0,0.10);
+    }
+
+    .input, .select {
+      width: 100%;
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d5db; /* gray-300 */
+      border-radius: 0.5rem;
+      outline: none;
+    }
+    .input:focus, .select:focus {
+      border-color: transparent;
+      box-shadow: 0 0 0 2px rgba(79,70,229,0.45); /* indigo ring */
+    }
+  </style>
 </head>
+
 <body>
-    <!-- Login Screen -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center">
-        <div class="card w-full max-w-md">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800">Nachhilfe Dashboard</h1>
-                <p class="text-gray-600 mt-2">Bitte melde dich an, um fortzufahren</p>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
-                    <input id="username" type="text" class="input" placeholder="Benutzername eingeben">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
-                    <input id="password" type="password" class="input" placeholder="Passwort eingeben">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Rolle</label>
-                    <select id="role" class="select">
-                        <option value="">Bitte wählen</option>
-                        <option value="manager">Manager</option>
-                        <option value="tutor">Tutor</option>
-                    </select>
-                </div>
-                <div class="pt-2">
-                    <button id="login-btn" class="btn-primary w-full">Anmelden</button>
-                </div>
-                <div id="login-error" class="text-red-500 text-sm text-center hidden">
-                    Ungültige Anmeldedaten. Bitte versuche es erneut.
-                </div>
-                <div class="text-center text-sm text-gray-500 mt-4">
-                    <p>Demo-Zugänge:</p>
-                    <p>Manager: admin / admin</p>
-                    <p>Tutor: tutor1 / tutor1 (bis tutor5)</p>
-                </div>
-            </div>
+  <!-- Login Screen -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center">
+    <div class="card w-full max-w-md">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Nachhilfe Dashboard</h1>
+        <p class="text-gray-600 mt-2">Bitte melde dich an, um fortzufahren</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
+          <input id="username" type="text" class="input" placeholder="Benutzername eingeben" />
         </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
+          <input id="password" type="password" class="input" placeholder="Passwort eingeben" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Rolle</label>
+          <select id="role" class="select">
+            <option value="">Bitte wählen</option>
+            <option value="manager">Manager</option>
+            <option value="tutor">Tutor</option>
+          </select>
+        </div>
+
+        <div class="pt-2">
+          <button id="login-btn" class="btn-primary w-full">Anmelden</button>
+        </div>
+
+        <div id="login-error" class="text-red-500 text-sm text-center hidden">
+          Ungültige Anmeldedaten. Bitte versuche es erneut.
+        </div>
+
+        <div class="text-center text-sm text-gray-500 mt-4">
+          <p>Demo-Zugänge:</p>
+          <p>Manager: admin / admin</p>
+          <p>Tutor: tutor1 / tutor1 (bis tutor5)</p>
+          <p class="mt-2">Hinweis: Neue Tutoren können vom Manager hinzugefügt werden.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manager Dashboard -->
+  <div id="manager-dashboard" class="hidden min-h-screen bg-gray-50">
+    <nav class="bg-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 flex items-center">
+              <svg class="h-8 w-8 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+                <path d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-8 6h16"></path>
+              </svg>
+              <span class="ml-2 text-xl font-bold text-gray-800">Nachhilfe Manager</span>
+            </div>
+          </div>
+          <div class="flex items-center">
+            <span id="manager-name" class="text-gray-700 mr-4">Admin</span>
+            <button id="manager-logout" class="btn-secondary">Abmelden</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Übersicht aller Nachhilfetermine</h1>
+        <p class="text-gray-600">Hier siehst du alle eingetragenen Termine und Berichte der Tutoren</p>
+      </div>
+
+      <div class="card mb-8">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
+          <h2 class="text-xl font-semibold text-gray-800">Terminübersicht</h2>
+          <div class="flex space-x-2">
+            <select id="tutor-filter" class="select max-w-xs">
+              <option value="all">Alle Tutoren</option>
+              <!-- dynamic -->
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tutor</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schüler</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fach</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uhrzeit</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Einheiten</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bericht</th>
+              </tr>
+            </thead>
+            <tbody id="appointments-table" class="bg-white divide-y divide-gray-200">
+              <!-- dynamic -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Schüler verwalten</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schüler</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tutor</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fächer</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frist</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verbleibende Einheiten</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="students-hours-table" class="bg-white divide-y divide-gray-200">
+              <!-- dynamic -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Tutoren verwalten</h2>
+        <p class="text-gray-600 mb-4">Hier kannst du Tutoren löschen (z.B. wenn ein Tutor das Unternehmen verlässt).</p>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Benutzername</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schüler</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Termine</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="tutors-table" class="bg-white divide-y divide-gray-200">
+              <!-- dynamic -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
-    <!-- Manager Dashboard -->
-    <div id="manager-dashboard" class="hidden min-h-screen bg-gray-50">
-        <nav class="bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 flex items-center">
-                            <svg class="h-8 w-8 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                                <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
-                                <path d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-8 6h16"></path>
-                            </svg>
-                            <span class="ml-2 text-xl font-bold text-gray-800">Nachhilfe Manager</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <span id="manager-name" class="text-gray-700 mr-4">Admin</span>
-                        <button id="manager-logout" class="btn-secondary">Abmelden</button>
-                    </div>
-                </div>
-            </div>
-        </nav>
+    <!-- Floating Action Button (Manager) -->
+    <div id="manager-fab" class="fixed bottom-6 right-6 z-40 hidden">
+      <div id="fab-menu" class="hidden mb-3 flex flex-col items-end space-y-2">
+        <button id="fab-add-student" class="btn-primary shadow-lg flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          Schüler hinzufügen
+        </button>
+        <button id="fab-add-tutor" class="btn-secondary shadow-lg flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          Tutor hinzufügen
+        </button>
+      </div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="mb-8">
-                <h1 class="text-2xl font-bold text-gray-800">Übersicht aller Nachhilfetermine</h1>
-                <p class="text-gray-600">Hier siehst du alle eingetragenen Termine und Berichte der Tutoren</p>
-            </div>
-
-            <div class="card mb-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-gray-800">Terminübersicht</h2>
-                    <div class="flex space-x-2">
-                        <select id="tutor-filter" class="select max-w-xs">
-                            <option value="all">Alle Tutoren</option>
-                            <option value="tutor1">Leon</option>
-                            <option value="tutor2">Anna</option>
-                            <option value="tutor3">Markus</option>
-                            <option value="tutor4">Julia</option>
-                            <option value="tutor5">Thomas</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tutor</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schüler</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uhrzeit</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Einheiten</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bericht</th>
-                            </tr>
-                        </thead>
-                        <tbody id="appointments-table" class="bg-white divide-y divide-gray-200">
-                            <!-- Termine werden hier dynamisch eingefügt -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Verbleibende Stunden pro Schüler</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schüler</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tutor</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verbleibende Einheiten</th>
-                            </tr>
-                        </thead>
-                        <tbody id="students-hours-table" class="bg-white divide-y divide-gray-200">
-                            <!-- Schüler werden hier dynamisch eingefügt -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+      <button id="fab-toggle" aria-label="Aktionen öffnen"
+        class="w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl flex items-center justify-center transition duration-200">
+        <svg id="fab-icon-plus" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+      </button>
     </div>
+  </div>
 
-    <!-- Tutor Dashboard -->
-    <div id="tutor-dashboard" class="hidden min-h-screen bg-gray-50">
-        <nav class="bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 flex items-center">
-                            <svg class="h-8 w-8 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                                <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
-                                <path d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-8 6h16"></path>
-                            </svg>
-                            <span class="ml-2 text-xl font-bold text-gray-800">Nachhilfe Tutor</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <span id="tutor-name" class="text-gray-700 mr-4">Tutor</span>
-                        <button id="tutor-logout" class="btn-secondary">Abmelden</button>
-                    </div>
-                </div>
+  <!-- Tutor Dashboard -->
+  <div id="tutor-dashboard" class="hidden min-h-screen bg-gray-50">
+    <nav class="bg-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 flex items-center">
+              <svg class="h-8 w-8 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+                <path d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-8 6h16"></path>
+              </svg>
+              <span class="ml-2 text-xl font-bold text-gray-800">Nachhilfe Tutor</span>
             </div>
-        </nav>
-
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="mb-8">
-                <h1 class="text-2xl font-bold text-gray-800">Deine Nachhilfeschüler</h1>
-                <p class="text-gray-600">Hier kannst du Termine für deine Schüler eintragen und Berichte verfassen</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div class="card bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-                    <h2 class="text-xl font-semibold mb-2">Neuen Termin eintragen</h2>
-                    <p class="mb-4">Klicke hier, um einen neuen Nachhilfetermin zu erstellen</p>
-                    <button id="new-appointment-btn" class="bg-white text-indigo-600 hover:bg-gray-100 font-medium py-2 px-4 rounded-lg transition duration-200">
-                        Termin erstellen
-                    </button>
-                </div>
-                <div class="card bg-white">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2">Deine Termine</h2>
-                    <p class="text-gray-600 mb-2">Anzahl deiner Termine:</p>
-                    <p id="tutor-appointment-count" class="text-3xl font-bold text-indigo-600">0</p>
-                </div>
-                <div class="card bg-white">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2">Deine Schüler</h2>
-                    <p class="text-gray-600 mb-2">Anzahl deiner Schüler:</p>
-                    <p id="tutor-student-count" class="text-3xl font-bold text-indigo-600">0</p>
-                </div>
-            </div>
-
-            <div class="card mb-8">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Deine Nachhilfeschüler</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fach</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verbleibende Einheiten</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktion</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tutor-students-table" class="bg-white divide-y divide-gray-200">
-                            <!-- Schüler werden hier dynamisch eingefügt -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Deine Termine</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schüler</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uhrzeit</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Einheiten</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktion</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tutor-appointments-table" class="bg-white divide-y divide-gray-200">
-                            <!-- Termine werden hier dynamisch eingefügt -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+          </div>
+          <div class="flex items-center">
+            <span id="tutor-name" class="text-gray-700 mr-4">Tutor</span>
+            <button id="tutor-logout" class="btn-secondary">Abmelden</button>
+          </div>
         </div>
-    </div>
+      </div>
+    </nav>
 
-    <!-- Modal für neuen Termin -->
-    <div id="appointment-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 fade-in">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">Neuen Termin erstellen</h3>
-                <button id="close-appointment-modal" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Schüler</label>
-                    <select id="student-select" class="select">
-                        <option value="">Bitte wählen</option>
-                        <!-- Schüler werden hier dynamisch eingefügt -->
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
-                    <input id="appointment-date" type="date" class="input">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Uhrzeit</label>
-                    <input id="appointment-time" type="time" class="input">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Einheiten</label>
-                    <select id="appointment-units" class="select">
-                        <option value="1">1 Einheit (45 Minuten)</option>
-                        <option value="2">2 Einheiten (90 Minuten)</option>
-                    </select>
-                </div>
-                <div class="flex justify-end space-x-3 pt-2">
-                    <button id="cancel-appointment" class="btn-secondary">Abbrechen</button>
-                    <button id="save-appointment" class="btn-primary">Speichern</button>
-                </div>
-            </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Deine Nachhilfeschüler</h1>
+        <p class="text-gray-600">Hier kannst du Termine für deine Schüler eintragen und Berichte verfassen</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="card bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+          <h2 class="text-xl font-semibold mb-2">Neuen Termin eintragen</h2>
+          <p class="mb-4">Klicke hier, um einen neuen Nachhilfetermin zu erstellen</p>
+          <button id="new-appointment-btn"
+            class="bg-white text-indigo-600 hover:bg-gray-100 font-medium py-2 px-4 rounded-lg transition duration-200">
+            Termin erstellen
+          </button>
         </div>
-    </div>
 
-    <!-- Modal für Bericht hinzufügen/bearbeiten -->
-    <div id="report-edit-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 fade-in">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">Bericht verfassen</h3>
-                <button id="close-report-edit-modal" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <p class="text-sm font-medium text-gray-700 mb-1">Schüler:</p>
-                    <p id="report-edit-student" class="text-gray-900"></p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-700 mb-1">Datum:</p>
-                    <p id="report-edit-date" class="text-gray-900"></p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Bericht:</label>
-                    <textarea id="report-edit-content" class="input h-32" placeholder="Bericht zum Termin eingeben..."></textarea>
-                </div>
-                <div class="flex justify-end space-x-3 pt-2">
-                    <button id="cancel-report-edit" class="btn-secondary">Abbrechen</button>
-                    <button id="save-report-edit" class="btn-primary">Speichern</button>
-                </div>
-            </div>
+        <div class="card bg-white">
+          <h2 class="text-xl font-semibold text-gray-800 mb-2">Deine Termine</h2>
+          <p class="text-gray-600 mb-2">Anzahl deiner Termine:</p>
+          <p id="tutor-appointment-count" class="text-3xl font-bold text-indigo-600">0</p>
         </div>
-    </div>
 
-    <!-- Modal für Berichtsansicht -->
-    <div id="report-view-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 fade-in">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">Bericht ansehen</h3>
-                <button id="close-report-view-modal" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div>
-                <div class="mb-4">
-                    <p class="text-sm font-medium text-gray-700 mb-1">Schüler:</p>
-                    <p id="report-view-student" class="text-gray-900"></p>
-                </div>
-                <div class="mb-4">
-                    <p class="text-sm font-medium text-gray-700 mb-1">Datum:</p>
-                    <p id="report-view-date" class="text-gray-900"></p>
-                </div>
-                <div class="mb-4">
-                    <p class="text-sm font-medium text-gray-700 mb-1">Tutor:</p>
-                    <p id="report-view-tutor" class="text-gray-900"></p>
-                </div>
-                <div class="mb-4">
-                    <p class="text-sm font-medium text-gray-700 mb-1">Bericht:</p>
-                    <p id="report-view-content" class="text-gray-900 whitespace-pre-line border border-gray-200 rounded-lg p-3 bg-gray-50"></p>
-                </div>
-                <div class="flex justify-end pt-2">
-                    <button id="close-report-view-btn" class="btn-primary">Schließen</button>
-                </div>
-            </div>
+        <div class="card bg-white">
+          <h2 class="text-xl font-semibold text-gray-800 mb-2">Deine Schüler</h2>
+          <p class="text-gray-600 mb-2">Anzahl deiner Schüler:</p>
+          <p id="tutor-student-count" class="text-3xl font-bold text-indigo-600">0</p>
         </div>
-    </div>
+      </div>
 
-    <script>
-        // Datenmodell
-        const users = {
-            admin: { username: 'admin', password: 'admin', role: 'manager', name: 'Ghadi' },
-            tutor1: { username: 'tutor1', password: 'tutor1', role: 'tutor', name: 'Leon' },
-            tutor2: { username: 'tutor2', password: 'tutor2', role: 'tutor', name: 'Anna' },
-            tutor3: { username: 'tutor3', password: 'tutor3', role: 'tutor', name: 'Markus' },
-            tutor4: { username: 'tutor4', password: 'tutor4', role: 'tutor', name: 'Julia' },
-            tutor5: { username: 'tutor5', password: 'tutor5', role: 'tutor', name: 'Thomas' }
+      <div class="card mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Deine Nachhilfeschüler</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fächer</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frist</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verbleibende Einheiten</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="tutor-students-table" class="bg-white divide-y divide-gray-200">
+              <!-- dynamic -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Deine Termine</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schüler</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fach</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uhrzeit</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Einheiten</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="tutor-appointments-table" class="bg-white divide-y divide-gray-200">
+              <!-- dynamic -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: New Appointment -->
+  <div id="appointment-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 fade-in">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-800">Neuen Termin erstellen</h3>
+        <button id="close-appointment-modal" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Schüler</label>
+          <select id="student-select" class="select">
+            <option value="">Bitte wählen</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Fach</label>
+          <select id="appointment-subject" class="select">
+            <option value="">Bitte wählen</option>
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Zeigt die Fächer, die der Manager beim Schüler hinterlegt hat.</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+          <input id="appointment-date" type="date" class="input" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Uhrzeit</label>
+          <input id="appointment-time" type="time" class="input" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Einheiten</label>
+          <select id="appointment-units" class="select">
+            <option value="1">1 Einheit (45 Minuten)</option>
+            <option value="2">2 Einheiten (90 Minuten)</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2">
+          <button id="cancel-appointment" class="btn-secondary">Abbrechen</button>
+          <button id="save-appointment" class="btn-primary">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Report Edit -->
+  <div id="report-edit-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 fade-in">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-800">Bericht verfassen</h3>
+        <button id="close-report-edit-modal" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <p class="text-sm font-medium text-gray-700 mb-1">Schüler:</p>
+          <p id="report-edit-student" class="text-gray-900"></p>
+        </div>
+
+        <div>
+          <p class="text-sm font-medium text-gray-700 mb-1">Fach:</p>
+          <p id="report-edit-subject" class="text-gray-900"></p>
+        </div>
+
+        <div>
+          <p class="text-sm font-medium text-gray-700 mb-1">Datum:</p>
+          <p id="report-edit-date" class="text-gray-900"></p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Bericht:</label>
+          <textarea id="report-edit-content" class="input h-32" placeholder="Bericht zum Termin eingeben..."></textarea>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2">
+          <button id="cancel-report-edit" class="btn-secondary">Abbrechen</button>
+          <button id="save-report-edit" class="btn-primary">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Report View -->
+  <div id="report-view-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 fade-in">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-800">Bericht ansehen</h3>
+        <button id="close-report-view-modal" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div>
+        <div class="mb-4">
+          <p class="text-sm font-medium text-gray-700 mb-1">Schüler:</p>
+          <p id="report-view-student" class="text-gray-900"></p>
+        </div>
+
+        <div class="mb-4">
+          <p class="text-sm font-medium text-gray-700 mb-1">Fach:</p>
+          <p id="report-view-subject" class="text-gray-900"></p>
+        </div>
+
+        <div class="mb-4">
+          <p class="text-sm font-medium text-gray-700 mb-1">Datum:</p>
+          <p id="report-view-date" class="text-gray-900"></p>
+        </div>
+
+        <div class="mb-4">
+          <p class="text-sm font-medium text-gray-700 mb-1">Tutor:</p>
+          <p id="report-view-tutor" class="text-gray-900"></p>
+        </div>
+
+        <div class="mb-4">
+          <p class="text-sm font-medium text-gray-700 mb-1">Bericht:</p>
+          <p id="report-view-content" class="text-gray-900 whitespace-pre-line border border-gray-200 rounded-lg p-3 bg-gray-50"></p>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button id="close-report-view-btn" class="btn-primary">Schließen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Student -->
+  <div id="add-student-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 fade-in">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-800">Schüler hinzufügen</h3>
+        <button id="close-add-student-modal" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Vorname</label>
+            <input id="student-firstname" type="text" class="input" placeholder="Vorname" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nachname</label>
+            <input id="student-lastname" type="text" class="input" placeholder="Nachname" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Offene Einheiten</label>
+            <select id="student-units" class="select">
+              <!-- dynamic -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tutor zuordnen</label>
+            <select id="student-tutor" class="select">
+              <option value="">Bitte wählen</option>
+              <!-- dynamic -->
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Frist (TT.MM.JJJJ)</label>
+          <input id="student-deadline" type="text" class="input" placeholder="TT.MM.JJJJ" inputmode="numeric"
+                 pattern="^\\d{2}\\.\\d{2}\\.\\d{4}$" />
+          <p class="text-xs text-gray-500 mt-1">Beispiel: 31.12.2026</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fächer</label>
+          <div id="subject-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-2 border border-gray-200 rounded-lg p-3 bg-gray-50">
+            <!-- dynamic -->
+          </div>
+          <div class="mt-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Eigenes Fach (optional)</label>
+            <input id="student-custom-subject" type="text" class="input" placeholder="z.B. Französisch" />
+          </div>
+          <p class="text-xs text-gray-500 mt-1">Tipp: Du kannst mehrere Fächer auswählen (empfohlen: max. 3).</p>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2">
+          <button id="cancel-add-student" class="btn-secondary">Abbrechen</button>
+          <button id="save-add-student" class="btn-primary">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Tutor -->
+  <div id="add-tutor-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 fade-in">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-800">Tutor hinzufügen</h3>
+        <button id="close-add-tutor-modal" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Vorname</label>
+            <input id="tutor-firstname" type="text" class="input" placeholder="Vorname" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nachname</label>
+            <input id="tutor-lastname" type="text" class="input" placeholder="Nachname" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
+            <input id="tutor-username" type="text" class="input" placeholder="z.B. tutor6" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
+            <input id="tutor-password" type="password" class="input" placeholder="Passwort" />
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2">
+          <button id="cancel-add-tutor" class="btn-secondary">Abbrechen</button>
+          <button id="save-add-tutor" class="btn-primary">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirm Delete -->
+  <div id="confirm-delete-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 fade-in">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-xl font-bold text-gray-800">Löschen bestätigen</h3>
+        <button id="close-confirm-delete-modal" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <p id="confirm-delete-text" class="text-gray-700 mt-2"></p>
+
+      <div class="flex justify-end space-x-3 pt-5">
+        <button id="cancel-confirm-delete" class="btn-secondary">Abbrechen</button>
+        <button id="confirm-delete-btn" class="btn-danger">Löschen</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // Storage + seed data
+    // =========================
+    const STORAGE_KEY = "nachhilfe_dashboard_state_v2";
+
+    const AVAILABLE_UNITS = [10, 15, 20, 25, 30, 35, 40];
+
+    // Edit this list anytime (flexible subject catalog)
+    const SUBJECT_CATALOG = [
+      "Mathematik",
+      "Deutsch",
+      "Englisch",
+      "Physik",
+      "Chemie",
+      "Biologie",
+      "Geschichte",
+      "Informatik"
+    ];
+
+    const SEED_USERS = {
+      admin: { username: "admin", password: "admin", role: "manager", name: "Ghadi", fullName: "Ghadi" },
+      tutor1: { username: "tutor1", password: "tutor1", role: "tutor", name: "Leon", fullName: "Leon" },
+      tutor2: { username: "tutor2", password: "tutor2", role: "tutor", name: "Anna", fullName: "Anna" },
+      tutor3: { username: "tutor3", password: "tutor3", role: "tutor", name: "Markus", fullName: "Markus" },
+      tutor4: { username: "tutor4", password: "tutor4", role: "tutor", name: "Julia", fullName: "Julia" },
+      tutor5: { username: "tutor5", password: "tutor5", role: "tutor", name: "Thomas", fullName: "Thomas" }
+    };
+
+    // NOTE: deadlineISO is stored as YYYY-MM-DD (easy to compare/format)
+    let studentsSeed = [
+      { id: 1, firstName: "Max", lastName: "Müller", tutor: "tutor1", subjects: ["Mathematik"], remainingUnits: 10, deadlineISO: "2026-06-30" },
+      { id: 2, firstName: "Lisa", lastName: "Schmidt", tutor: "tutor1", subjects: ["Deutsch"], remainingUnits: 8, deadlineISO: "2026-05-31" },
+      { id: 3, firstName: "Tim", lastName: "Schulz", tutor: "tutor2", subjects: ["Englisch"], remainingUnits: 12, deadlineISO: "2026-07-15" },
+      { id: 4, firstName: "Sarah", lastName: "Weber", tutor: "tutor2", subjects: ["Physik", "Mathematik"], remainingUnits: 6, deadlineISO: "2026-04-30" },
+      { id: 5, firstName: "Jan", lastName: "Becker", tutor: "tutor3", subjects: ["Chemie"], remainingUnits: 15, deadlineISO: "2026-09-30" },
+      { id: 6, firstName: "Laura", lastName: "Meyer", tutor: "tutor4", subjects: ["Biologie"], remainingUnits: 9, deadlineISO: "2026-08-31" },
+      { id: 7, firstName: "Felix", lastName: "Hoffmann", tutor: "tutor5", subjects: ["Geschichte"], remainingUnits: 7, deadlineISO: "2026-12-31" },
+      { id: 8, firstName: "Emma", lastName: "Klein", tutor: "tutor3", subjects: ["Informatik", "Mathematik", "Physik"], remainingUnits: 11, deadlineISO: "2026-10-31" }
+    ];
+
+    let appointmentsSeed = [
+      { id: 1, student: 1, tutor: "tutor1", subject: "Mathematik", date: "2026-03-01", time: "14:30", units: 1, report: "Max hat heute gut mitgearbeitet. Wir haben Gleichungen geübt.", reportStatus: "completed" },
+      { id: 2, student: 3, tutor: "tutor2", subject: "Englisch", date: "2026-03-02", time: "16:00", units: 2, report: "Tim hat Fortschritte in der englischen Grammatik gemacht.", reportStatus: "completed" },
+      { id: 3, student: 5, tutor: "tutor3", subject: "Chemie", date: "2026-03-03", time: "15:00", units: 1, report: "", reportStatus: "pending" },
+      { id: 4, student: 2, tutor: "tutor1", subject: "Deutsch", date: "2026-03-04", time: "13:00", units: 1, report: "Lisa hat einen Aufsatz geschrieben und wir haben ihn korrigiert.", reportStatus: "completed" }
+    ];
+
+    function deepClone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    let users = deepClone(SEED_USERS);
+    let students = deepClone(studentsSeed);
+    let appointments = deepClone(appointmentsSeed);
+    let nextStudentId = 9;
+    let nextAppointmentId = 5;
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return;
+
+        if (parsed.users) users = parsed.users;
+        if (parsed.students) students = parsed.students;
+        if (parsed.appointments) appointments = parsed.appointments;
+        if (parsed.nextStudentId) nextStudentId = parsed.nextStudentId;
+        if (parsed.nextAppointmentId) nextAppointmentId = parsed.nextAppointmentId;
+
+        migrateLegacyDataIfNeeded();
+      } catch (e) {
+        console.warn("State load failed, using seed data.", e);
+      }
+    }
+
+    function saveState() {
+      const toSave = {
+        users,
+        students,
+        appointments,
+        nextStudentId,
+        nextAppointmentId
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    }
+
+    function migrateLegacyDataIfNeeded() {
+      // Support older student models: {name, subject, tutor, remainingUnits}
+      students = students.map(s => {
+        let firstName = s.firstName;
+        let lastName = s.lastName;
+
+        if (!firstName && s.name) {
+          const parts = String(s.name).trim().split(/\s+/);
+          firstName = parts.shift() || "";
+          lastName = parts.join(" ");
+        }
+
+        let subjects = s.subjects;
+        if (!subjects && s.subject) subjects = [String(s.subject)];
+
+        return {
+          id: s.id,
+          firstName: firstName || "",
+          lastName: lastName || "",
+          tutor: s.tutor,
+          subjects: Array.isArray(subjects) ? subjects : [],
+          remainingUnits: Number(s.remainingUnits ?? 0),
+          deadlineISO: s.deadlineISO || ""
         };
+      });
 
-        const students = [
-            { id: 1, name: 'Max Müller', tutor: 'tutor1', subject: 'Mathematik', remainingUnits: 10 },
-            { id: 2, name: 'Lisa Schmidt', tutor: 'tutor1', subject: 'Deutsch', remainingUnits: 8 },
-            { id: 3, name: 'Tim Schulz', tutor: 'tutor2', subject: 'Englisch', remainingUnits: 12 },
-            { id: 4, name: 'Sarah Weber', tutor: 'tutor2', subject: 'Physik', remainingUnits: 6 },
-            { id: 5, name: 'Jan Becker', tutor: 'tutor3', subject: 'Chemie', remainingUnits: 15 },
-            { id: 6, name: 'Laura Meyer', tutor: 'tutor4', subject: 'Biologie', remainingUnits: 9 },
-            { id: 7, name: 'Felix Hoffmann', tutor: 'tutor5', subject: 'Geschichte', remainingUnits: 7 },
-            { id: 8, name: 'Emma Klein', tutor: 'tutor3', subject: 'Informatik', remainingUnits: 11 }
-        ];
+      // Support older appointment model without subject
+      appointments = appointments.map(a => ({
+        ...a,
+        subject: a.subject || inferSubjectForAppointment(a.student)
+      }));
 
-        let appointments = [
-            { id: 1, student: 1, tutor: 'tutor1', date: '2023-06-15', time: '14:30', units: 1, report: 'Max hat heute gut mitgearbeitet. Wir haben Gleichungen geübt.', reportStatus: 'completed' },
-            { id: 2, student: 3, tutor: 'tutor2', date: '2023-06-16', time: '16:00', units: 2, report: 'Tim hat Fortschritte in der englischen Grammatik gemacht.', reportStatus: 'completed' },
-            { id: 3, student: 5, tutor: 'tutor3', date: '2023-06-17', time: '15:00', units: 1, report: '', reportStatus: 'pending' },
-            { id: 4, student: 2, tutor: 'tutor1', date: '2023-06-18', time: '13:00', units: 1, report: 'Lisa hat einen Aufsatz geschrieben und wir haben ihn korrigiert.', reportStatus: 'completed' }
-        ];
+      // Ensure usernames exist in users map entries
+      Object.keys(users).forEach(key => {
+        if (!users[key].username) users[key].username = key;
+        if (!users[key].fullName) users[key].fullName = users[key].name || key;
+      });
 
-        let currentUser = null;
-        let nextAppointmentId = 5;
-        let currentAppointmentId = null;
+      saveState();
+    }
 
-        // DOM-Elemente
-        const loginScreen = document.getElementById('login-screen');
-        const managerDashboard = document.getElementById('manager-dashboard');
-        const tutorDashboard = document.getElementById('tutor-dashboard');
-        const appointmentModal = document.getElementById('appointment-modal');
-        const reportEditModal = document.getElementById('report-edit-modal');
-        const reportViewModal = document.getElementById('report-view-modal');
+    function inferSubjectForAppointment(studentId) {
+      const s = students.find(x => x.id === studentId);
+      return (s && Array.isArray(s.subjects) && s.subjects[0]) ? s.subjects[0] : "-";
+    }
 
-        // Login-Funktionalität
-        document.getElementById('login-btn').addEventListener('click', () => {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const role = document.getElementById('role').value;
-            
-            const user = users[username];
-            
-            if (user && user.password === password && user.role === role) {
-                currentUser = user;
-                loginScreen.classList.add('hidden');
-                
-                if (role === 'manager') {
-                    document.getElementById('manager-name').textContent = user.name;
-                    managerDashboard.classList.remove('hidden');
-                    renderManagerDashboard();
-                } else {
-                    document.getElementById('tutor-name').textContent = user.name;
-                    tutorDashboard.classList.remove('hidden');
-                    renderTutorDashboard();
-                }
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
+    loadState();
+
+    // =========================
+    // Session state
+    // =========================
+    let currentUser = null;
+    let currentAppointmentId = null;
+    let pendingDelete = null; // { kind: 'student'|'tutor', id: number|string }
+
+    // =========================
+    // DOM refs
+    // =========================
+    const loginScreen = document.getElementById("login-screen");
+    const managerDashboard = document.getElementById("manager-dashboard");
+    const tutorDashboard = document.getElementById("tutor-dashboard");
+
+    const appointmentModal = document.getElementById("appointment-modal");
+    const reportEditModal = document.getElementById("report-edit-modal");
+    const reportViewModal = document.getElementById("report-view-modal");
+
+    const addStudentModal = document.getElementById("add-student-modal");
+    const addTutorModal = document.getElementById("add-tutor-modal");
+    const confirmDeleteModal = document.getElementById("confirm-delete-modal");
+
+    // =========================
+    // Helpers
+    // =========================
+    function studentFullName(student) {
+      return `${student.firstName || ""} ${student.lastName || ""}`.trim();
+    }
+
+    function tutorLabel(username) {
+      const u = users[username];
+      return u ? (u.fullName || u.name || u.username) : username;
+    }
+
+    function formatDateISOToDE(iso) {
+      if (!iso) return "-";
+      const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return iso;
+      const yyyy = m[1], mm = m[2], dd = m[3];
+      return `${dd}.${mm}.${yyyy}`;
+    }
+
+    // Parse DD.MM.YYYY to ISO, validating real calendar date
+    function parseDEDateToISO(de) {
+      const m = String(de || "").trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      if (!m) return null;
+
+      const dd = Number(m[1]);
+      const mm = Number(m[2]);
+      const yyyy = Number(m[3]);
+
+      const dt = new Date(yyyy, mm - 1, dd);
+      if (dt.getFullYear() !== yyyy || dt.getMonth() !== (mm - 1) || dt.getDate() !== dd) return null;
+
+      const ddStr = String(dd).padStart(2, "0");
+      const mmStr = String(mm).padStart(2, "0");
+      return `${yyyy}-${mmStr}-${ddStr}`;
+    }
+
+    function getTutorUsernames() {
+      return Object.values(users)
+        .filter(u => u.role === "tutor")
+        .map(u => u.username)
+        .sort((a, b) => tutorLabel(a).localeCompare(tutorLabel(b), "de"));
+    }
+
+    function getTutorStudentCount(tutorUsername) {
+      return students.filter(s => s.tutor === tutorUsername).length;
+    }
+
+    function getTutorAppointmentCount(tutorUsername) {
+      return appointments.filter(a => a.tutor === tutorUsername).length;
+    }
+
+    // =========================
+    // Auth
+    // =========================
+    document.getElementById("login-btn").addEventListener("click", () => {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+
+      const user = users[username];
+
+      if (user && user.password === password && user.role === role) {
+        currentUser = user;
+        document.getElementById("login-error").classList.add("hidden");
+
+        loginScreen.classList.add("hidden");
+
+        if (role === "manager") {
+          document.getElementById("manager-name").textContent = user.fullName || user.name || "Admin";
+          managerDashboard.classList.remove("hidden");
+          document.getElementById("manager-fab").classList.remove("hidden");
+          renderManagerDashboard();
+        } else {
+          document.getElementById("tutor-name").textContent = user.fullName || user.name || "Tutor";
+          tutorDashboard.classList.remove("hidden");
+          renderTutorDashboard();
+        }
+      } else {
+        document.getElementById("login-error").classList.remove("hidden");
+      }
+    });
+
+    document.getElementById("manager-logout").addEventListener("click", logout);
+    document.getElementById("tutor-logout").addEventListener("click", logout);
+
+    function logout() {
+      currentUser = null;
+      managerDashboard.classList.add("hidden");
+      tutorDashboard.classList.add("hidden");
+      document.getElementById("manager-fab").classList.add("hidden");
+
+      loginScreen.classList.remove("hidden");
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+      document.getElementById("role").value = "";
+      document.getElementById("login-error").classList.add("hidden");
+
+      hideFabMenu();
+    }
+
+    // =========================
+    // Manager UI
+    // =========================
+    document.getElementById("tutor-filter").onchange = (e) => {
+      renderAppointmentsTable(e.target.value);
+    };
+
+    function renderManagerDashboard() {
+      renderTutorFilterOptions();
+      renderAppointmentsTable(document.getElementById("tutor-filter").value || "all");
+      renderStudentsManagementTable();
+      renderTutorsManagementTable();
+    }
+
+    function renderTutorFilterOptions() {
+      const select = document.getElementById("tutor-filter");
+      const currentValue = select.value || "all";
+
+      select.innerHTML = `<option value="all">Alle Tutoren</option>`;
+      getTutorUsernames().forEach(username => {
+        const option = document.createElement("option");
+        option.value = username;
+        option.textContent = tutorLabel(username);
+        select.appendChild(option);
+      });
+
+      // Restore filter value if still present
+      const stillExists = Array.from(select.options).some(o => o.value === currentValue);
+      select.value = stillExists ? currentValue : "all";
+    }
+
+    function renderAppointmentsTable(tutorFilter = "all") {
+      const tableBody = document.getElementById("appointments-table");
+      tableBody.innerHTML = "";
+
+      let filtered = appointments.slice();
+      if (tutorFilter !== "all") filtered = filtered.filter(a => a.tutor === tutorFilter);
+
+      // Sort newest first
+      filtered.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+
+      if (filtered.length === 0) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-6 py-6 text-sm text-gray-500" colspan="8">
+            Keine Termine gefunden.
+          </td>
+        `;
+        tableBody.appendChild(row);
+        return;
+      }
+
+      filtered.forEach(app => {
+        const student = students.find(s => s.id === app.student);
+        const tutor = users[app.tutor];
+
+        let statusBadge = app.reportStatus === "completed"
+          ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Abgeschlossen</span>'
+          : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Offen</span>';
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tutor ? (tutor.fullName || tutor.name) : app.tutor}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student ? studentFullName(student) : "—"}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.subject || "—"}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateISOToDE(app.date)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.time} Uhr</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.units} (${app.units * 45} Min.)</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm">
+            ${app.reportStatus === "completed"
+              ? `<button class="text-indigo-600 hover:text-indigo-900 view-report" data-id="${app.id}">Bericht ansehen</button>`
+              : '<span class="text-gray-500">Noch kein Bericht</span>'}
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      tableBody.querySelectorAll(".view-report").forEach(btn => {
+        btn.onclick = (e) => showReportViewModal(Number(e.target.dataset.id));
+      });
+    }
+
+    function renderStudentsManagementTable() {
+      const tbody = document.getElementById("students-hours-table");
+      tbody.innerHTML = "";
+
+      if (students.length === 0) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-6 py-6 text-sm text-gray-500" colspan="6">
+            Noch keine Schüler vorhanden. Klicke auf “+”, um einen Schüler hinzuzufügen.
+          </td>
+        `;
+        tbody.appendChild(row);
+        return;
+      }
+
+      const sorted = students.slice().sort((a, b) => studentFullName(a).localeCompare(studentFullName(b), "de"));
+
+      sorted.forEach(student => {
+        const row = document.createElement("tr");
+
+        const remainingBadge = student.remainingUnits > 5
+          ? "bg-green-100 text-green-800"
+          : "bg-yellow-100 text-yellow-800";
+
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${studentFullName(student)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tutorLabel(student.tutor)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${(student.subjects || []).join(", ") || "—"}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateISOToDE(student.deadlineISO)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm">
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${remainingBadge}">
+              ${student.remainingUnits} Einheiten
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm">
+            <button class="text-red-600 hover:text-red-800 delete-student" data-id="${student.id}">
+              Löschen
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      tbody.querySelectorAll(".delete-student").forEach(btn => {
+        btn.onclick = (e) => {
+          const studentId = Number(e.target.dataset.id);
+          const s = students.find(x => x.id === studentId);
+
+          showConfirmDeleteModal({
+            kind: "student",
+            id: studentId,
+            message: `Möchtest du den Schüler “${s ? studentFullName(s) : ""}” wirklich löschen? Alle zugehörigen Termine werden ebenfalls gelöscht.`
+          });
+        };
+      });
+    }
+
+    function renderTutorsManagementTable() {
+      const tbody = document.getElementById("tutors-table");
+      tbody.innerHTML = "";
+
+      const tutorUsernames = getTutorUsernames();
+
+      if (tutorUsernames.length === 0) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-6 py-6 text-sm text-gray-500" colspan="5">
+            Keine Tutoren vorhanden.
+          </td>
+        `;
+        tbody.appendChild(row);
+        return;
+      }
+
+      tutorUsernames.forEach(username => {
+        const u = users[username];
+        const sCount = getTutorStudentCount(username);
+        const aCount = getTutorAppointmentCount(username);
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${u ? (u.fullName || u.name || username) : username}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${username}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${sCount}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${aCount}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm">
+            <button class="text-red-600 hover:text-red-800 delete-tutor" data-username="${username}">
+              Löschen
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      tbody.querySelectorAll(".delete-tutor").forEach(btn => {
+        btn.onclick = (e) => {
+          const username = e.target.dataset.username;
+          const sCount = getTutorStudentCount(username);
+          const aCount = getTutorAppointmentCount(username);
+
+          showConfirmDeleteModal({
+            kind: "tutor",
+            id: username,
+            message: `Möchtest du den Tutor “${tutorLabel(username)}” wirklich löschen? Hinweis: Dieser Tutor hat ${sCount} Schüler und ${aCount} Termine. Beim Löschen werden auch diese Schüler/Termine entfernt.`
+          });
+        };
+      });
+    }
+
+    // =========================
+    // Tutor UI
+    // =========================
+    document.getElementById("new-appointment-btn").onclick = () => showAppointmentModal(null);
+
+    function renderTutorDashboard() {
+      const tutorStudents = students.filter(s => s.tutor === currentUser.username);
+      const tutorAppointments = appointments.filter(a => a.tutor === currentUser.username);
+
+      document.getElementById("tutor-student-count").textContent = tutorStudents.length;
+      document.getElementById("tutor-appointment-count").textContent = tutorAppointments.length;
+
+      renderTutorStudentsTable();
+      renderTutorAppointmentsTable();
+    }
+
+    function renderTutorStudentsTable() {
+      const tbody = document.getElementById("tutor-students-table");
+      tbody.innerHTML = "";
+
+      const tutorStudents = students
+        .filter(s => s.tutor === currentUser.username)
+        .sort((a, b) => studentFullName(a).localeCompare(studentFullName(b), "de"));
+
+      if (tutorStudents.length === 0) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-6 py-6 text-sm text-gray-500" colspan="5">
+            Du hast aktuell keine zugewiesenen Schüler.
+          </td>
+        `;
+        tbody.appendChild(row);
+        return;
+      }
+
+      tutorStudents.forEach(student => {
+        const remainingBadge = student.remainingUnits > 5
+          ? "bg-green-100 text-green-800"
+          : "bg-yellow-100 text-yellow-800";
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${studentFullName(student)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${(student.subjects || []).join(", ") || "—"}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateISOToDE(student.deadlineISO)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm">
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${remainingBadge}">
+              ${student.remainingUnits} Einheiten
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm">
+            <button class="text-indigo-600 hover:text-indigo-900 new-appointment" data-id="${student.id}">
+              Termin erstellen
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      tbody.querySelectorAll(".new-appointment").forEach(btn => {
+        btn.onclick = (e) => showAppointmentModal(Number(e.target.dataset.id));
+      });
+    }
+
+    function renderTutorAppointmentsTable() {
+      const tbody = document.getElementById("tutor-appointments-table");
+      tbody.innerHTML = "";
+
+      const tutorAppointments = appointments
+        .filter(a => a.tutor === currentUser.username)
+        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+
+      if (tutorAppointments.length === 0) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-6 py-6 text-sm text-gray-500" colspan="7">
+            Noch keine Termine eingetragen.
+          </td>
+        `;
+        tbody.appendChild(row);
+        return;
+      }
+
+      tutorAppointments.forEach(app => {
+        const student = students.find(s => s.id === app.student);
+
+        let statusBadge = app.reportStatus === "completed"
+          ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Abgeschlossen</span>'
+          : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Offen</span>';
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student ? studentFullName(student) : "—"}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.subject || "—"}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateISOToDE(app.date)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.time} Uhr</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.units} (${app.units * 45} Min.)</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm">
+            ${app.reportStatus === "completed"
+              ? `<div class="flex space-x-2">
+                  <button class="text-indigo-600 hover:text-indigo-900 view-report" data-id="${app.id}">Ansehen</button>
+                  <button class="text-green-600 hover:text-green-900 edit-report" data-id="${app.id}">Bearbeiten</button>
+                </div>`
+              : `<button class="text-green-600 hover:text-green-900 add-report" data-id="${app.id}">Bericht hinzufügen</button>`
             }
-        });
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
 
-        // Logout-Funktionalität
-        document.getElementById('manager-logout').addEventListener('click', logout);
-        document.getElementById('tutor-logout').addEventListener('click', logout);
+      tbody.querySelectorAll(".view-report").forEach(btn => {
+        btn.onclick = (e) => showReportViewModal(Number(e.target.dataset.id));
+      });
 
-        function logout() {
-            currentUser = null;
-            managerDashboard.classList.add('hidden');
-            tutorDashboard.classList.add('hidden');
-            loginScreen.classList.remove('hidden');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('role').value = '';
-            document.getElementById('login-error').classList.add('hidden');
-        }
+      tbody.querySelectorAll(".edit-report, .add-report").forEach(btn => {
+        btn.onclick = (e) => showReportEditModal(Number(e.target.dataset.id));
+      });
+    }
 
-        // Manager Dashboard Rendering
-        function renderManagerDashboard() {
-            renderAppointmentsTable();
-            renderStudentsHoursTable();
-            
-            // Filter-Funktionalität
-            document.getElementById('tutor-filter').addEventListener('change', (e) => {
-                renderAppointmentsTable(e.target.value);
-            });
-        }
+    // =========================
+    // Appointment modal logic (Tutor)
+    // =========================
+    document.getElementById("close-appointment-modal").onclick = () => appointmentModal.classList.add("hidden");
+    document.getElementById("cancel-appointment").onclick = () => appointmentModal.classList.add("hidden");
 
-        function renderAppointmentsTable(tutorFilter = 'all') {
-            const tableBody = document.getElementById('appointments-table');
-            tableBody.innerHTML = '';
-            
-            let filteredAppointments = appointments;
-            if (tutorFilter !== 'all') {
-                filteredAppointments = appointments.filter(app => app.tutor === tutorFilter);
-            }
-            
-            filteredAppointments.forEach(app => {
-                const student = students.find(s => s.id === app.student);
-                const tutor = users[app.tutor];
-                
-                const row = document.createElement('tr');
-                
-                // Status-Badge
-                let statusBadge = '';
-                if (app.reportStatus === 'completed') {
-                    statusBadge = '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Abgeschlossen</span>';
-                } else {
-                    statusBadge = '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Offen</span>';
-                }
-                
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tutor.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(app.date)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.time} Uhr</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.units} (${app.units * 45} Min.)</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        ${app.reportStatus === 'completed' ? 
-                            `<button class="text-indigo-600 hover:text-indigo-900 view-report" data-id="${app.id}">
-                                Bericht ansehen
-                            </button>` : 
-                            '<span class="text-gray-500">Noch kein Bericht</span>'
-                        }
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-            
-            // Event-Listener für Berichtsansicht
-            document.querySelectorAll('.view-report').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const appId = parseInt(e.target.dataset.id);
-                    showReportViewModal(appId);
-                });
-            });
-        }
+    document.getElementById("student-select").onchange = (e) => {
+      const studentId = Number(e.target.value);
+      populateAppointmentSubjectOptions(studentId);
+    };
 
-        function renderStudentsHoursTable() {
-            const tableBody = document.getElementById('students-hours-table');
-            tableBody.innerHTML = '';
-            
-            students.forEach(student => {
-                const tutor = users[student.tutor];
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tutor.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${student.remainingUnits > 5 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                            ${student.remainingUnits} Einheiten
-                        </span>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
+    function showAppointmentModal(studentId = null) {
+      const studentSelect = document.getElementById("student-select");
+      studentSelect.innerHTML = '<option value="">Bitte wählen</option>';
 
-        // Tutor Dashboard Rendering
-        function renderTutorDashboard() {
-            const tutorStudents = students.filter(s => s.tutor === currentUser.username);
-            const tutorAppointments = appointments.filter(a => a.tutor === currentUser.username);
-            
-            document.getElementById('tutor-student-count').textContent = tutorStudents.length;
-            document.getElementById('tutor-appointment-count').textContent = tutorAppointments.length;
-            
-            renderTutorStudentsTable();
-            renderTutorAppointmentsTable();
-            
-            // Event-Listener für neuen Termin
-            document.getElementById('new-appointment-btn').addEventListener('click', showAppointmentModal);
-        }
+      const tutorStudents = students.filter(s => s.tutor === currentUser.username);
 
-        function renderTutorStudentsTable() {
-            const tableBody = document.getElementById('tutor-students-table');
-            tableBody.innerHTML = '';
-            
-            const tutorStudents = students.filter(s => s.tutor === currentUser.username);
-            
-            tutorStudents.forEach(student => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.subject}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${student.remainingUnits > 5 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                            ${student.remainingUnits} Einheiten
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <button class="text-indigo-600 hover:text-indigo-900 new-appointment" data-id="${student.id}">
-                            Termin erstellen
-                        </button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-            
-            // Event-Listener für Termin erstellen
-            document.querySelectorAll('.new-appointment').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const studentId = parseInt(e.target.dataset.id);
-                    showAppointmentModal(studentId);
-                });
-            });
-        }
+      tutorStudents.forEach(student => {
+        const option = document.createElement("option");
+        option.value = student.id;
+        const subjectsLabel = (student.subjects || []).join(", ") || "—";
+        const deadlineLabel = formatDateISOToDE(student.deadlineISO);
+        option.textContent = `${studentFullName(student)} (${subjectsLabel}, ${student.remainingUnits} Einheiten, Frist: ${deadlineLabel})`;
+        studentSelect.appendChild(option);
+      });
 
-        function renderTutorAppointmentsTable() {
-            const tableBody = document.getElementById('tutor-appointments-table');
-            tableBody.innerHTML = '';
-            
-            const tutorAppointments = appointments
-                .filter(a => a.tutor === currentUser.username)
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            tutorAppointments.forEach(app => {
-                const student = students.find(s => s.id === app.student);
-                
-                // Status-Badge
-                let statusBadge = '';
-                if (app.reportStatus === 'completed') {
-                    statusBadge = '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Abgeschlossen</span>';
-                } else {
-                    statusBadge = '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Offen</span>';
-                }
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(app.date)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.time} Uhr</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.units} (${app.units * 45} Min.)</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        ${app.reportStatus === 'completed' ? 
-                            `<div class="flex space-x-2">
-                                <button class="text-indigo-600 hover:text-indigo-900 view-report" data-id="${app.id}">
-                                    Ansehen
-                                </button>
-                                <button class="text-green-600 hover:text-green-900 edit-report" data-id="${app.id}">
-                                    Bearbeiten
-                                </button>
-                            </div>` : 
-                            `<button class="text-green-600 hover:text-green-900 add-report" data-id="${app.id}">
-                                Bericht hinzufügen
-                            </button>`
-                        }
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-            
-            // Event-Listener für Berichte
-            document.querySelectorAll('.view-report').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const appId = parseInt(e.target.dataset.id);
-                    showReportViewModal(appId);
-                });
-            });
-            
-            document.querySelectorAll('.edit-report, .add-report').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const appId = parseInt(e.target.dataset.id);
-                    showReportEditModal(appId);
-                });
-            });
-        }
+      if (studentId) studentSelect.value = String(studentId);
 
-        // Modal für neuen Termin
-        function showAppointmentModal(studentId = null) {
-            const studentSelect = document.getElementById('student-select');
-            studentSelect.innerHTML = '<option value="">Bitte wählen</option>';
-            
-            const tutorStudents = students.filter(s => s.tutor === currentUser.username);
-            
-            tutorStudents.forEach(student => {
-                const option = document.createElement('option');
-                option.value = student.id;
-                option.textContent = `${student.name} (${student.subject}, ${student.remainingUnits} Einheiten)`;
-                studentSelect.appendChild(option);
-            });
-            
-            if (studentId) {
-                studentSelect.value = studentId;
-            }
-            
-            // Aktuelles Datum als Standardwert
-            const today = new Date();
-            const formattedDate = today.toISOString().split('T')[0];
-            document.getElementById('appointment-date').value = formattedDate;
-            
-            // Aktuelle Uhrzeit als Standardwert
-            const hours = String(today.getHours()).padStart(2, '0');
-            const minutes = String(today.getMinutes()).padStart(2, '0');
-            document.getElementById('appointment-time').value = `${hours}:${minutes}`;
-            
-            document.getElementById('appointment-units').value = '1';
-            
-            appointmentModal.classList.remove('hidden');
-        }
+      // Default date = today
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      document.getElementById("appointment-date").value = `${yyyy}-${mm}-${dd}`;
 
-        // Modal für Bericht bearbeiten/hinzufügen
-        function showReportEditModal(appointmentId) {
-            currentAppointmentId = appointmentId;
-            const appointment = appointments.find(a => a.id === appointmentId);
-            const student = students.find(s => s.id === appointment.student);
-            
-            document.getElementById('report-edit-student').textContent = student.name;
-            document.getElementById('report-edit-date').textContent = `${formatDate(appointment.date)}, ${appointment.time} Uhr`;
-            document.getElementById('report-edit-content').value = appointment.report;
-            
-            reportEditModal.classList.remove('hidden');
-        }
+      // Default time = current time
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      document.getElementById("appointment-time").value = `${hh}:${min}`;
 
-        // Modal für Bericht ansehen
-        function showReportViewModal(appointmentId) {
-            const appointment = appointments.find(a => a.id === appointmentId);
-            const student = students.find(s => s.id === appointment.student);
-            const tutor = users[appointment.tutor];
-            
-            document.getElementById('report-view-student').textContent = student.name;
-            document.getElementById('report-view-date').textContent = `${formatDate(appointment.date)}, ${appointment.time} Uhr`;
-            document.getElementById('report-view-tutor').textContent = tutor.name;
-            document.getElementById('report-view-content').textContent = appointment.report;
-            
-            reportViewModal.classList.remove('hidden');
-        }
+      document.getElementById("appointment-units").value = "1";
 
-        // Event-Listener für Modals
-        document.getElementById('close-appointment-modal').addEventListener('click', () => {
-            appointmentModal.classList.add('hidden');
-        });
-        
-        document.getElementById('cancel-appointment').addEventListener('click', () => {
-            appointmentModal.classList.add('hidden');
-        });
-        
-        document.getElementById('save-appointment').addEventListener('click', () => {
-            const studentId = parseInt(document.getElementById('student-select').value);
-            const date = document.getElementById('appointment-date').value;
-            const time = document.getElementById('appointment-time').value;
-            const units = parseInt(document.getElementById('appointment-units').value);
-            
-            if (!studentId || !date || !time) {
-                alert('Bitte fülle alle Pflichtfelder aus.');
-                return;
-            }
-            
-            // Prüfen, ob der Schüler genügend Einheiten hat
-            const student = students.find(s => s.id === studentId);
-            if (student.remainingUnits < units) {
-                alert(`${student.name} hat nicht genügend Einheiten übrig. Verbleibend: ${student.remainingUnits}`);
-                return;
-            }
-            
-            // Neuen Termin erstellen
-            const newAppointment = {
-                id: nextAppointmentId++,
-                student: studentId,
-                tutor: currentUser.username,
-                date,
-                time,
-                units,
-                report: '',
-                reportStatus: 'pending'
-            };
-            
-            appointments.push(newAppointment);
-            
-            // Einheiten vom Schüler abziehen
-            student.remainingUnits -= units;
-            
-            appointmentModal.classList.add('hidden');
-            
-            // Dashboard aktualisieren
-            if (currentUser.role === 'tutor') {
-                renderTutorDashboard();
-            } else {
-                renderManagerDashboard();
-            }
-        });
-        
-        document.getElementById('close-report-edit-modal').addEventListener('click', () => {
-            reportEditModal.classList.add('hidden');
-        });
-        
-        document.getElementById('cancel-report-edit').addEventListener('click', () => {
-            reportEditModal.classList.add('hidden');
-        });
-        
-        document.getElementById('save-report-edit').addEventListener('click', () => {
-            const report = document.getElementById('report-edit-content').value;
-            
-            if (!report.trim()) {
-                alert('Bitte gib einen Bericht ein.');
-                return;
-            }
-            
-            // Bericht speichern
-            const appointment = appointments.find(a => a.id === currentAppointmentId);
-            appointment.report = report;
-            appointment.reportStatus = 'completed';
-            
-            reportEditModal.classList.add('hidden');
-            
-            // Dashboard aktualisieren
-            if (currentUser.role === 'tutor') {
-                renderTutorDashboard();
-            } else {
-                renderManagerDashboard();
-            }
-        });
-        
-        document.getElementById('close-report-view-modal').addEventListener('click', () => {
-            reportViewModal.classList.add('hidden');
-        });
-        
-        document.getElementById('close-report-view-btn').addEventListener('click', () => {
-            reportViewModal.classList.add('hidden');
-        });
+      // Initialize subject options based on selected student
+      const selectedStudentId = Number(studentSelect.value || 0);
+      populateAppointmentSubjectOptions(selectedStudentId);
 
-        // Hilfsfunktionen
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('de-DE');
-        }
-    </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'952b55a751c8a8cb',t:'MTc1MDQyMzIyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+      appointmentModal.classList.remove("hidden");
+    }
+
+    function populateAppointmentSubjectOptions(studentId) {
+      const subjectSelect = document.getElementById("appointment-subject");
+      subjectSelect.innerHTML = '<option value="">Bitte wählen</option>';
+
+      if (!studentId) return;
+
+      const student = students.find(s => s.id === studentId);
+      const subjects = (student && Array.isArray(student.subjects)) ? student.subjects : [];
+
+      subjects.forEach(sub => {
+        const option = document.createElement("option");
+        option.value = sub;
+        option.textContent = sub;
+        subjectSelect.appendChild(option);
+      });
+
+      if (subjects.length === 1) subjectSelect.value = subjects[0];
+    }
+
+    document.getElementById("save-appointment").onclick = () => {
+      const studentId = Number(document.getElementById("student-select").value);
+      const subject = document.getElementById("appointment-subject").value;
+      const date = document.getElementById("appointment-date").value;
+      const time = document.getElementById("appointment-time").value;
+      const units = Number(document.getElementById("appointment-units").value);
+
+      if (!studentId || !date || !time || !subject) {
+        alert("Bitte fülle alle Pflichtfelder aus (inkl. Fach).");
+        return;
+      }
+
+      const student = students.find(s => s.id === studentId);
+      if (!student) {
+        alert("Schüler nicht gefunden.");
+        return;
+      }
+
+      if (student.remainingUnits < units) {
+        alert(`${studentFullName(student)} hat nicht genügend Einheiten übrig. Verbleibend: ${student.remainingUnits}`);
+        return;
+      }
+
+      const newAppointment = {
+        id: nextAppointmentId++,
+        student: studentId,
+        tutor: currentUser.username,
+        subject,
+        date,
+        time,
+        units,
+        report: "",
+        reportStatus: "pending"
+      };
+
+      appointments.push(newAppointment);
+      student.remainingUnits -= units;
+
+      saveState();
+      appointmentModal.classList.add("hidden");
+
+      renderTutorDashboard();
+      if (managerDashboard && !managerDashboard.classList.contains("hidden")) renderManagerDashboard();
+    };
+
+    // =========================
+    // Report modals
+    // =========================
+    document.getElementById("close-report-edit-modal").onclick = () => reportEditModal.classList.add("hidden");
+    document.getElementById("cancel-report-edit").onclick = () => reportEditModal.classList.add("hidden");
+
+    document.getElementById("close-report-view-modal").onclick = () => reportViewModal.classList.add("hidden");
+    document.getElementById("close-report-view-btn").onclick = () => reportViewModal.classList.add("hidden");
+
+    function showReportEditModal(appointmentId) {
+      currentAppointmentId = appointmentId;
+      const appointment = appointments.find(a => a.id === appointmentId);
+      if (!appointment) return;
+
+      const student = students.find(s => s.id === appointment.student);
+
+      document.getElementById("report-edit-student").textContent = student ? studentFullName(student) : "—";
+      document.getElementById("report-edit-subject").textContent = appointment.subject || "—";
+      document.getElementById("report-edit-date").textContent = `${formatDateISOToDE(appointment.date)}, ${appointment.time} Uhr`;
+      document.getElementById("report-edit-content").value = appointment.report || "";
+
+      reportEditModal.classList.remove("hidden");
+    }
+
+    function showReportViewModal(appointmentId) {
+      const appointment = appointments.find(a => a.id === appointmentId);
+      if (!appointment) return;
+
+      const student = students.find(s => s.id === appointment.student);
+      const tutor = users[appointment.tutor];
+
+      document.getElementById("report-view-student").textContent = student ? studentFullName(student) : "—";
+      document.getElementById("report-view-subject").textContent = appointment.subject || "—";
+      document.getElementById("report-view-date").textContent = `${formatDateISOToDE(appointment.date)}, ${appointment.time} Uhr`;
+      document.getElementById("report-view-tutor").textContent = tutor ? (tutor.fullName || tutor.name) : appointment.tutor;
+      document.getElementById("report-view-content").textContent = appointment.report || "";
+
+      reportViewModal.classList.remove("hidden");
+    }
+
+    document.getElementById("save-report-edit").onclick = () => {
+      const report = document.getElementById("report-edit-content").value;
+
+      if (!report.trim()) {
+        alert("Bitte gib einen Bericht ein.");
+        return;
+      }
+
+      const appointment = appointments.find(a => a.id === currentAppointmentId);
+      if (!appointment) return;
+
+      appointment.report = report;
+      appointment.reportStatus = "completed";
+
+      saveState();
+      reportEditModal.classList.add("hidden");
+
+      if (currentUser.role === "tutor") {
+        renderTutorDashboard();
+      } else {
+        renderManagerDashboard();
+      }
+    };
+
+    // =========================
+    // Manager FAB + Add Student/Tutor
+    // =========================
+    const fabMenu = document.getElementById("fab-menu");
+    document.getElementById("fab-toggle").onclick = () => {
+      fabMenu.classList.toggle("hidden");
+    };
+
+    function hideFabMenu() {
+      fabMenu.classList.add("hidden");
+    }
+
+    document.getElementById("fab-add-student").onclick = () => {
+      hideFabMenu();
+      showAddStudentModal();
+    };
+
+    document.getElementById("fab-add-tutor").onclick = () => {
+      hideFabMenu();
+      showAddTutorModal();
+    };
+
+    // Add Student modal wiring
+    document.getElementById("close-add-student-modal").onclick = () => addStudentModal.classList.add("hidden");
+    document.getElementById("cancel-add-student").onclick = () => addStudentModal.classList.add("hidden");
+
+    function showAddStudentModal() {
+      document.getElementById("student-firstname").value = "";
+      document.getElementById("student-lastname").value = "";
+      document.getElementById("student-custom-subject").value = "";
+      document.getElementById("student-deadline").value = "";
+      document.getElementById("student-deadline").setCustomValidity("");
+
+      // Units
+      const unitsSelect = document.getElementById("student-units");
+      unitsSelect.innerHTML = "";
+      AVAILABLE_UNITS.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = String(u);
+        opt.textContent = `${u} Einheiten (à 45 Min.)`;
+        unitsSelect.appendChild(opt);
+      });
+      unitsSelect.value = "10";
+
+      // Tutor select
+      const tutorSelect = document.getElementById("student-tutor");
+      tutorSelect.innerHTML = '<option value="">Bitte wählen</option>';
+      getTutorUsernames().forEach(username => {
+        const opt = document.createElement("option");
+        opt.value = username;
+        opt.textContent = tutorLabel(username);
+        tutorSelect.appendChild(opt);
+      });
+
+      // Subject checkbox grid (3 columns)
+      const grid = document.getElementById("subject-grid");
+      grid.innerHTML = "";
+      SUBJECT_CATALOG.forEach((sub, idx) => {
+        const id = `sub_${idx}`;
+        const wrapper = document.createElement("label");
+        wrapper.className = "flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none";
+        wrapper.innerHTML = `
+          <input type="checkbox" class="h-4 w-4" value="${sub}" />
+          <span>${sub}</span>
+        `;
+        grid.appendChild(wrapper);
+      });
+
+      addStudentModal.classList.remove("hidden");
+    }
+
+    document.getElementById("save-add-student").onclick = () => {
+      const firstName = document.getElementById("student-firstname").value.trim();
+      const lastName = document.getElementById("student-lastname").value.trim();
+      const units = Number(document.getElementById("student-units").value);
+      const tutor = document.getElementById("student-tutor").value;
+      const deadlineDE = document.getElementById("student-deadline").value.trim();
+      const deadlineISO = parseDEDateToISO(deadlineDE);
+
+      if (!firstName || !lastName || !units || !tutor) {
+        alert("Bitte fülle Vorname, Nachname, Einheiten und Tutor aus.");
+        return;
+      }
+
+      // Deadline validation via Constraint Validation API
+      const deadlineInput = document.getElementById("student-deadline");
+      if (!deadlineDE) {
+        deadlineInput.setCustomValidity("Bitte Frist eingeben (TT.MM.JJJJ).");
+        deadlineInput.reportValidity();
+        return;
+      }
+      if (!deadlineISO) {
+        deadlineInput.setCustomValidity("Ungültiges Datum. Bitte im Format TT.MM.JJJJ (z.B. 31.12.2026).");
+        deadlineInput.reportValidity();
+        return;
+      }
+      deadlineInput.setCustomValidity("");
+
+      // Subjects
+      const checked = Array.from(document.querySelectorAll("#subject-grid input[type='checkbox']:checked"))
+        .map(x => x.value);
+
+      const custom = document.getElementById("student-custom-subject").value.trim();
+      let subjects = checked.slice();
+      if (custom) subjects.push(custom);
+
+      // De-duplicate
+      subjects = Array.from(new Set(subjects.map(s => s.trim()).filter(Boolean)));
+
+      if (subjects.length === 0) {
+        alert("Bitte mindestens ein Fach auswählen (oder ein eigenes Fach eintragen).");
+        return;
+      }
+      if (subjects.length > 3) {
+        alert("Bitte maximal 3 Fächer auswählen (Empfehlung).");
+        return;
+      }
+
+      const newStudent = {
+        id: nextStudentId++,
+        firstName,
+        lastName,
+        tutor,
+        subjects,
+        remainingUnits: units,
+        deadlineISO
+      };
+
+      students.push(newStudent);
+      saveState();
+
+      addStudentModal.classList.add("hidden");
+      renderManagerDashboard();
+    };
+
+    // Add Tutor modal wiring
+    document.getElementById("close-add-tutor-modal").onclick = () => addTutorModal.classList.add("hidden");
+    document.getElementById("cancel-add-tutor").onclick = () => addTutorModal.classList.add("hidden");
+
+    function showAddTutorModal() {
+      document.getElementById("tutor-firstname").value = "";
+      document.getElementById("tutor-lastname").value = "";
+      document.getElementById("tutor-username").value = "";
+      document.getElementById("tutor-password").value = "";
+      addTutorModal.classList.remove("hidden");
+    }
+
+    document.getElementById("save-add-tutor").onclick = () => {
+      const first = document.getElementById("tutor-firstname").value.trim();
+      const last = document.getElementById("tutor-lastname").value.trim();
+      const username = document.getElementById("tutor-username").value.trim();
+      const password = document.getElementById("tutor-password").value;
+
+      if (!first || !last || !username || !password) {
+        alert("Bitte fülle alle Felder aus.");
+        return;
+      }
+
+      if (users[username]) {
+        alert("Benutzername existiert bereits. Bitte wähle einen anderen.");
+        return;
+      }
+
+      users[username] = {
+        username,
+        password,
+        role: "tutor",
+        name: first,
+        fullName: `${first} ${last}`.trim()
+      };
+
+      saveState();
+      addTutorModal.classList.add("hidden");
+
+      renderManagerDashboard();
+    };
+
+    // =========================
+    // Delete confirmation
+    // =========================
+    document.getElementById("close-confirm-delete-modal").onclick = () => confirmDeleteModal.classList.add("hidden");
+    document.getElementById("cancel-confirm-delete").onclick = () => confirmDeleteModal.classList.add("hidden");
+
+    function showConfirmDeleteModal({ kind, id, message }) {
+      pendingDelete = { kind, id };
+      document.getElementById("confirm-delete-text").textContent = message;
+      confirmDeleteModal.classList.remove("hidden");
+    }
+
+    document.getElementById("confirm-delete-btn").onclick = () => {
+      if (!pendingDelete) return;
+
+      if (pendingDelete.kind === "student") {
+        deleteStudentById(Number(pendingDelete.id));
+      } else if (pendingDelete.kind === "tutor") {
+        deleteTutorByUsername(String(pendingDelete.id));
+      }
+
+      pendingDelete = null;
+      confirmDeleteModal.classList.add("hidden");
+
+      // Refresh UI if active
+      if (currentUser && currentUser.role === "manager") renderManagerDashboard();
+      if (currentUser && currentUser.role === "tutor") renderTutorDashboard();
+    };
+
+    function deleteStudentById(studentId) {
+      students = students.filter(s => s.id !== studentId);
+      appointments = appointments.filter(a => a.student !== studentId);
+      saveState();
+    }
+
+    function deleteTutorByUsername(username) {
+      // Remove tutor
+      delete users[username];
+
+      // Remove associated students and their appointments
+      const removedStudentIds = students.filter(s => s.tutor === username).map(s => s.id);
+      students = students.filter(s => s.tutor !== username);
+
+      appointments = appointments.filter(a => a.tutor !== username && !removedStudentIds.includes(a.student));
+      saveState();
+    }
+
+    // =========================
+    // Initialize manager FAB visibility safety
+    // =========================
+    hideFabMenu();
+  </script>
+</body>
 </html>
