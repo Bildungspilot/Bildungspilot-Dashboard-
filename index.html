@@ -848,47 +848,75 @@ const supabase = window.supabase.createClient(
     // =========================
     // Auth
     // =========================
-      document.getElementById("login-btn").addEventListener("click", async () => {
+     document.getElementById("login-btn").addEventListener("click", async () => {
   const email = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value;
   const role = document.getElementById("role").value;
 
-  document.getElementById("login-error").classList.add("hidden");
+  const loginError = document.getElementById("login-error");
+  loginError.classList.add("hidden");
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-  if (error || !data.user) {
-    document.getElementById("login-error").classList.remove("hidden");
-    return;
+    if (error || !data.user) {
+      loginError.textContent = "Login fehlgeschlagen. Bitte E-Mail oder Passwort prüfen.";
+      loginError.classList.remove("hidden");
+      return;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profileError || !profile) {
+      loginError.textContent = "Profil nicht gefunden. Bitte profiles-Tabelle prüfen.";
+      loginError.classList.remove("hidden");
+      return;
+    }
+
+    const user = {
+      username: profile.username,
+      role: profile.role,
+      name: profile.name,
+      fullName: profile.full_name,
+      email: profile.email
+    };
+
+    if (user.role !== role) {
+      await supabase.auth.signOut();
+      loginError.textContent = "Die gewählte Rolle passt nicht zu diesem Konto.";
+      loginError.classList.remove("hidden");
+      return;
+    }
+
+    currentUser = user;
+    loginScreen.classList.add("hidden");
+
+    if (role === "manager") {
+      document.getElementById("manager-name").textContent = user.fullName || user.name || "Admin";
+      managerDashboard.classList.remove("hidden");
+
+      const managerFab = document.getElementById("manager-fab");
+      if (managerFab) managerFab.classList.remove("hidden");
+
+      renderManagerDashboard();
+    } else {
+      document.getElementById("tutor-name").textContent = user.fullName || user.name || "Tutor";
+      tutorDashboard.classList.remove("hidden");
+      renderTutorDashboard();
+    }
+  } catch (err) {
+    loginError.textContent = "Technischer Fehler beim Login.";
+    loginError.classList.remove("hidden");
+    console.error("Login error:", err);
   }
-
- const { data: profile } = await supabase
-  .from("profiles")
-  .select("*")
-  .eq("id", data.user.id)
-  .single();
-
-if (!profile) {
-  document.getElementById("login-error").classList.remove("hidden");
-  return;
-}
-
-const user = {
-  username: profile.username,
-  role: profile.role,
-  name: profile.name,
-  fullName: profile.full_name,
-  email: profile.email
-};
-
-  if (user.role !== role) {
-    await supabase.auth.signOut();
-    document.getElementById("login-error").classList.remove("hidden");
-    return;
-  }
+});
 
   currentUser = user;
   loginScreen.classList.add("hidden");
@@ -908,20 +936,26 @@ const user = {
     document.getElementById("manager-logout").addEventListener("click", logout);
     document.getElementById("tutor-logout").addEventListener("click", logout);
 
-    function logout() {
-      currentUser = null;
-      managerDashboard.classList.add("hidden");
-      tutorDashboard.classList.add("hidden");
-      document.getElementById("manager-fab").classList.add("hidden");
+    async function logout() {
+  await supabase.auth.signOut();
 
-      loginScreen.classList.remove("hidden");
-      document.getElementById("username").value = "";
-      document.getElementById("password").value = "";
-      document.getElementById("role").value = "";
-      document.getElementById("login-error").classList.add("hidden");
+  currentUser = null;
+  managerDashboard.classList.add("hidden");
+  tutorDashboard.classList.add("hidden");
 
-      hideFabMenu();
-    }
+  const fab = document.getElementById("manager-fab");
+  if (fab) fab.classList.add("hidden");
+
+  loginScreen.classList.remove("hidden");
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+  document.getElementById("role").value = "";
+  document.getElementById("login-error").classList.add("hidden");
+
+  if (typeof hideFabMenu === "function") {
+    hideFabMenu();
+  }
+}
 
     // =========================
     // Manager UI
