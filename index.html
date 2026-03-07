@@ -7,7 +7,7 @@
 
   <!-- Tailwind (Play CDN). Note: Play CDN is intended for development, not production. -->
   <script src="https://cdn.tailwindcss.com"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
@@ -96,8 +96,8 @@
 
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
-          <input id="username" type="text" class="input" placeholder="Benutzername eingeben" />
+          <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+          <input id="username" type="email" class="input" placeholder="E-Mail eingeben">
         </div>
 
         <div>
@@ -834,7 +834,13 @@
     function getTutorStudentCount(tutorUsername) {
       return students.filter(s => s.tutor === tutorUsername).length;
     }
+    const SUPABASE_URL = "https://xlxcbofzzfbdfkzealqn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_V9fqs6BBXre_JYbEeRQZJA_gMKTbZXy";
 
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
     function getTutorAppointmentCount(tutorUsername) {
       return appointments.filter(a => a.tutor === tutorUsername).length;
     }
@@ -842,33 +848,62 @@
     // =========================
     // Auth
     // =========================
-    document.getElementById("login-btn").addEventListener("click", () => {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
-      const role = document.getElementById("role").value;
+      document.getElementById("login-btn").addEventListener("click", async () => {
+  const email = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+  const role = document.getElementById("role").value;
 
-      const user = users[username];
+  document.getElementById("login-error").classList.add("hidden");
 
-      if (user && user.password === password && user.role === role) {
-        currentUser = user;
-        document.getElementById("login-error").classList.add("hidden");
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
 
-        loginScreen.classList.add("hidden");
+  if (error || !data.user) {
+    document.getElementById("login-error").classList.remove("hidden");
+    return;
+  }
 
-        if (role === "manager") {
-          document.getElementById("manager-name").textContent = user.fullName || user.name || "Admin";
-          managerDashboard.classList.remove("hidden");
-          document.getElementById("manager-fab").classList.remove("hidden");
-          renderManagerDashboard();
-        } else {
-          document.getElementById("tutor-name").textContent = user.fullName || user.name || "Tutor";
-          tutorDashboard.classList.remove("hidden");
-          renderTutorDashboard();
-        }
-      } else {
-        document.getElementById("login-error").classList.remove("hidden");
-      }
-    });
+ const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("id", data.user.id)
+  .single();
+
+if (!profile) {
+  document.getElementById("login-error").classList.remove("hidden");
+  return;
+}
+
+const user = {
+  username: profile.username,
+  role: profile.role,
+  name: profile.name,
+  fullName: profile.full_name,
+  email: profile.email
+};
+
+  if (user.role !== role) {
+    await supabase.auth.signOut();
+    document.getElementById("login-error").classList.remove("hidden");
+    return;
+  }
+
+  currentUser = user;
+  loginScreen.classList.add("hidden");
+
+  if (role === "manager") {
+    document.getElementById("manager-name").textContent = user.fullName || user.name || "Admin";
+    managerDashboard.classList.remove("hidden");
+    document.getElementById("manager-fab").classList.remove("hidden");
+    renderManagerDashboard();
+  } else {
+    document.getElementById("tutor-name").textContent = user.fullName || user.name || "Tutor";
+    tutorDashboard.classList.remove("hidden");
+    renderTutorDashboard();
+  }
+});
 
     document.getElementById("manager-logout").addEventListener("click", logout);
     document.getElementById("tutor-logout").addEventListener("click", logout);
