@@ -927,20 +927,6 @@ const supabase = window.supabase.createClient(
   }
 });
 
-  currentUser = user;
-  loginScreen.classList.add("hidden");
-
-  if (role === "manager") {
-    document.getElementById("manager-name").textContent = user.fullName || user.name || "Admin";
-    managerDashboard.classList.remove("hidden");
-    document.getElementById("manager-fab").classList.remove("hidden");
-    renderManagerDashboard();
-  } else {
-    document.getElementById("tutor-name").textContent = user.fullName || user.name || "Tutor";
-    tutorDashboard.classList.remove("hidden");
-    renderTutorDashboard();
-  }
-});
 
     document.getElementById("manager-logout").addEventListener("click", logout);
     document.getElementById("tutor-logout").addEventListener("click", logout);
