@@ -118,9 +118,7 @@
           <button id="login-btn" class="btn-primary w-full">Anmelden</button>
         </div>
 
-        <div id="login-error" class="text-red-500 text-sm text-center hidden">
-          Ungültige Anmeldedaten. Bitte versuche es erneut.
-        </div>
+        <div id="login-error" class="text-red-500 text-sm text-center mt-3 hidden"></div>
 
         <div class="text-center text-sm text-gray-500 mt-4">
           <p>Bildungspilot</p>
@@ -841,6 +839,7 @@ const supabase = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
+    console.log("Supabase geladen", supabase);
     function getTutorAppointmentCount(tutorUsername) {
       return appointments.filter(a => a.tutor === tutorUsername).length;
     }
@@ -849,18 +848,24 @@ const supabase = window.supabase.createClient(
     // Auth
     // =========================
      document.getElementById("login-btn").addEventListener("click", async () => {
-  const email = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value;
-  const role = document.getElementById("role").value;
-
   const loginError = document.getElementById("login-error");
-  loginError.classList.add("hidden");
 
   try {
+    const email = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
+
+    console.log("Login gestartet", { email, role });
+
+    loginError.textContent = "";
+    loginError.classList.add("hidden");
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
+
+    console.log("Supabase Login Antwort", { data, error });
 
     if (error || !data.user) {
       loginError.textContent = "Login fehlgeschlagen. Bitte E-Mail oder Passwort prüfen.";
@@ -873,6 +878,8 @@ const supabase = window.supabase.createClient(
       .select("*")
       .eq("id", data.user.id)
       .single();
+
+    console.log("Profil Antwort", { profile, profileError, userId: data.user.id });
 
     if (profileError || !profile) {
       loginError.textContent = "Profil nicht gefunden. Bitte profiles-Tabelle prüfen.";
@@ -887,6 +894,8 @@ const supabase = window.supabase.createClient(
       fullName: profile.full_name,
       email: profile.email
     };
+
+    console.log("User aus profiles", user);
 
     if (user.role !== role) {
       await supabase.auth.signOut();
@@ -912,9 +921,9 @@ const supabase = window.supabase.createClient(
       renderTutorDashboard();
     }
   } catch (err) {
+    console.error("Harter Login-Fehler:", err);
     loginError.textContent = "Technischer Fehler beim Login.";
     loginError.classList.remove("hidden");
-    console.error("Login error:", err);
   }
 });
 
