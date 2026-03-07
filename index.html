@@ -832,14 +832,15 @@
     function getTutorStudentCount(tutorUsername) {
       return students.filter(s => s.tutor === tutorUsername).length;
     }
-    const SUPABASE_URL = "https://xlxcbofzzfbdfkzealqn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_V9fqs6BBXre_JYbEeRQZJA_gMKTbZXy";
+ const SUPABASE_URL = "https://xlxcbofzzfbdfkzealqn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_...";
 
-const supabase = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
-    console.log("Supabase geladen", supabase);
+
+console.log("Supabase geladen", supabaseClient);
     function getTutorAppointmentCount(tutorUsername) {
       return appointments.filter(a => a.tutor === tutorUsername).length;
     }
@@ -860,7 +861,7 @@ const supabase = window.supabase.createClient(
     loginError.textContent = "";
     loginError.classList.add("hidden");
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
       email,
       password
     });
@@ -898,7 +899,7 @@ const supabase = window.supabase.createClient(
     console.log("User aus profiles", user);
 
     if (user.role !== role) {
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       loginError.textContent = "Die gewählte Rolle passt nicht zu diesem Konto.";
       loginError.classList.remove("hidden");
       return;
