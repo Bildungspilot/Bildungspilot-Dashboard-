@@ -839,8 +839,36 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
-
 console.log("Supabase geladen", supabaseClient);
+
+
+// =========================
+// STUDENTS AUS SUPABASE LADEN
+// =========================
+
+async function loadStudents() {
+  const { data, error } = await supabaseClient
+    .from("students")
+    .select("*");
+
+  if (error) {
+    console.error("Fehler beim Laden der Schüler:", error);
+    return;
+  }
+
+  students = (data || []).map(s => ({
+    id: s.id,
+    firstName: s.first_name,
+    lastName: s.last_name,
+    name: s.first_name + " " + s.last_name,
+    tutor: s.tutor_username,
+    remainingUnits: Number(s.remaining_units || 0),
+    deadline: s.deadline || "",
+    subject: s.subjects || ""
+  }));
+}
+
+
     function getTutorAppointmentCount(tutorUsername) {
       return appointments.filter(a => a.tutor === tutorUsername).length;
     }
@@ -915,11 +943,14 @@ console.log("Supabase geladen", supabaseClient);
       const managerFab = document.getElementById("manager-fab");
       if (managerFab) managerFab.classList.remove("hidden");
 
-      renderManagerDashboard();
+      await loadStudents();
+renderManagerDashboard();
+      
     } else {
       document.getElementById("tutor-name").textContent = user.fullName || user.name || "Tutor";
       tutorDashboard.classList.remove("hidden");
-      renderTutorDashboard();
+      await loadStudents();
+renderTutorDashboard();
     }
   } catch (err) {
     console.error("Harter Login-Fehler:", err);
@@ -1513,7 +1544,7 @@ console.log("Supabase geladen", supabaseClient);
       addStudentModal.classList.remove("hidden");
     }
 
-    document.getElementById("save-add-student").onclick = () => {
+    document.getElementById("save-add-student").onclick = async () => {
       const firstName = document.getElementById("student-firstname").value.trim();
       const lastName = document.getElementById("student-lastname").value.trim();
       const units = Number(document.getElementById("student-units").value);
@@ -1539,43 +1570,37 @@ console.log("Supabase geladen", supabaseClient);
         return;
       }
       deadlineInput.setCustomValidity("");
+      const selectedSubjects = Array.from(
+  document.querySelectorAll("#subject-grid input[type='checkbox']:checked")
+).map(cb => cb.value);
 
-      // Subjects
-      const checked = Array.from(document.querySelectorAll("#subject-grid input[type='checkbox']:checked"))
-        .map(x => x.value);
+if (selectedSubjects.length === 0) {
+  alert("Bitte mindestens ein Fach auswählen.");
+  return;
+}
 
-      const custom = document.getElementById("student-custom-subject").value.trim();
-      let subjects = checked.slice();
-      if (custom) subjects.push(custom);
+const { error } = await supabaseClient
+  .from("students")
+  .insert({
+    first_name: firstName,
+    last_name: lastName,
+    tutor_username: tutor,
+    remaining_units: units,
+    deadline: deadlineISO,
+    subjects: selectedSubjects.join(", ")
+  });
 
-      // De-duplicate
-      subjects = Array.from(new Set(subjects.map(s => s.trim()).filter(Boolean)));
+if (error) {
+  console.error("Fehler beim Speichern des Schülers:", error);
+  alert("Fehler beim Speichern des Schülers.");
+  return;
+}
 
-      if (subjects.length === 0) {
-        alert("Bitte mindestens ein Fach auswählen (oder ein eigenes Fach eintragen).");
-        return;
-      }
-      if (subjects.length > 3) {
-        alert("Bitte maximal 3 Fächer auswählen (Empfehlung).");
-        return;
-      }
+await loadStudents();
+addStudentModal.classList.add("hidden");
+renderManagerDashboard();
+return;
 
-      const newStudent = {
-        id: nextStudentId++,
-        firstName,
-        lastName,
-        tutor,
-        subjects,
-        remainingUnits: units,
-        deadlineISO
-      };
-
-      students.push(newStudent);
-      saveState();
-
-      addStudentModal.classList.add("hidden");
-      renderManagerDashboard();
-    };
 
     // Add Tutor modal wiring
     document.getElementById("close-add-tutor-modal").onclick = () => addTutorModal.classList.add("hidden");
