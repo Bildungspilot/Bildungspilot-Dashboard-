@@ -1743,14 +1743,14 @@ return;
       confirmDeleteModal.classList.remove("hidden");
     }
 
-    document.getElementById("confirm-delete-btn").onclick = () => {
+    document.getElementById("confirm-delete-btn").onclick = async () => {
       if (!pendingDelete) return;
 
       if (pendingDelete.kind === "student") {
-        deleteStudentById(Number(pendingDelete.id));
-      } else if (pendingDelete.kind === "tutor") {
-        deleteTutorByUsername(String(pendingDelete.id));
-      }
+  await deleteStudentById(String(pendingDelete.id));
+} else if (pendingDelete.kind === "tutor") {
+  deleteTutorByUsername(String(pendingDelete.id));
+}
 
       pendingDelete = null;
       confirmDeleteModal.classList.add("hidden");
@@ -1760,11 +1760,35 @@ return;
       if (currentUser && currentUser.role === "tutor") renderTutorDashboard();
     };
 
-    function deleteStudentById(studentId) {
-      students = students.filter(s => s.id !== studentId);
-      appointments = appointments.filter(a => a.student !== studentId);
-      saveState();
-    }
+    async function deleteStudentById(studentId) {
+  const { error: appointmentDeleteError } = await supabaseClient
+    .from("appointments")
+    .delete()
+    .eq("student_id", studentId);
+
+  if (appointmentDeleteError) {
+    console.error("Fehler beim Löschen der Termine:", appointmentDeleteError);
+    alert("Termine konnten nicht gelöscht werden.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("students")
+    .delete()
+    .eq("id", studentId);
+
+  if (error) {
+    console.error("Fehler beim Löschen des Schülers:", error);
+    alert("Schüler konnte nicht gelöscht werden.");
+    return;
+  }
+
+  await loadStudents();
+  await loadAppointments();
+
+  if (currentUser.role === "manager") renderManagerDashboard();
+  if (currentUser.role === "tutor") renderTutorDashboard();
+}
 
     function deleteTutorByUsername(username) {
       // Remove tutor
