@@ -1122,7 +1122,7 @@ renderTutorDashboard();
       });
 
       tableBody.querySelectorAll(".view-report").forEach(btn => {
-        btn.onclick = (e) => showReportViewModal(Number(e.target.dataset.id));
+        btn.onclick = (e) => showReportViewModal(String(e.target.dataset.id));
       });
     }
 
@@ -1351,7 +1351,7 @@ renderTutorDashboard();
       });
 
       tbody.querySelectorAll(".edit-report, .add-report").forEach(btn => {
-        btn.onclick = (e) => showReportEditModal(Number(e.target.dataset.id));
+        btn.onclick = (e) => showReportEditModal(String(e.target.dataset.id));
       });
     }
 
@@ -1501,7 +1501,7 @@ return;
 
     function showReportEditModal(appointmentId) {
       currentAppointmentId = appointmentId;
-      const appointment = appointments.find(a => a.id === appointmentId);
+      const appointment = appointments.find(a => String(a.id) === String(appointmentId));
       if (!appointment) return;
 
       const student = students.find(s => s.id === appointment.student);
