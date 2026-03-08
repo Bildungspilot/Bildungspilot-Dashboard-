@@ -1170,7 +1170,7 @@ renderTutorDashboard();
 
       tbody.querySelectorAll(".delete-student").forEach(btn => {
         btn.onclick = (e) => {
-          const studentId = Number(e.target.dataset.id);
+          const studentId = String(e.target.dataset.id);
           const s = students.find(x => x.id === studentId);
 
           showConfirmDeleteModal({
