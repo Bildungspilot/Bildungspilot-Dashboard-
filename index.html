@@ -901,7 +901,28 @@ tutorProfiles.forEach(p => {
 });
  
 }
+async function loadAppointments() {
+  const { data, error } = await supabaseClient
+    .from("appointments")
+    .select("*");
 
+  if (error) {
+    console.error("Fehler beim Laden der Termine:", error);
+    return;
+  }
+
+  appointments = (data || []).map(a => ({
+    id: a.id,
+    student: a.student_id,
+    tutor: a.tutor_username,
+    subject: a.subject || "",
+    date: a.date,
+    time: a.time,
+    units: Number(a.units || 0),
+    report: a.report || "",
+    reportStatus: a.report_status || "pending"
+  }));
+}
 
     function getTutorAppointmentCount(tutorUsername) {
       return appointments.filter(a => a.tutor === tutorUsername).length;
@@ -979,6 +1000,7 @@ tutorProfiles.forEach(p => {
 
       await loadTutors();
 await loadStudents();
+await loadAppointments();
 renderManagerDashboard();
       
     } else {
@@ -986,6 +1008,7 @@ renderManagerDashboard();
       tutorDashboard.classList.remove("hidden");
       await loadTutors();
 await loadStudents();
+await loadAppointments();
 renderTutorDashboard();
     }
   } catch (err) {
@@ -1457,6 +1480,7 @@ if (updateError) {
 }
 
 await loadStudents();
+await loadAppointments();
 appointmentModal.classList.add("hidden");
 
 if (currentUser.role === "manager") renderManagerDashboard();
