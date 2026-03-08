@@ -855,8 +855,7 @@ async function loadStudents() {
     console.error("Fehler beim Laden der Schüler:", error);
     return;
   }
-
-  students = (data || []).map(s => ({
+   students = (data || []).map(s => ({
     id: s.id,
     firstName: s.first_name,
     lastName: s.last_name,
@@ -866,6 +865,33 @@ async function loadStudents() {
     deadline: s.deadline || "",
     subject: s.subjects || ""
   }));
+}
+
+// HIER EINFÜGEN
+async function loadTutors() {
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("*")
+    .eq("role", "tutor");
+
+  if (error) {
+    console.error("Fehler beim Laden der Tutoren:", error);
+    return;
+  }
+
+ 
+
+  const tutorProfiles = data || [];
+
+  tutorProfiles.forEach(p => {
+    users[p.username] = {
+      username: p.username,
+      role: p.role,
+      name: p.name,
+      fullName: p.full_name,
+      email: p.email
+    };
+  });
 }
 
 
@@ -943,13 +969,15 @@ async function loadStudents() {
       const managerFab = document.getElementById("manager-fab");
       if (managerFab) managerFab.classList.remove("hidden");
 
-      await loadStudents();
+      await loadTutors();
+await loadStudents();
 renderManagerDashboard();
       
     } else {
       document.getElementById("tutor-name").textContent = user.fullName || user.name || "Tutor";
       tutorDashboard.classList.remove("hidden");
-      await loadStudents();
+      await loadTutors();
+await loadStudents();
 renderTutorDashboard();
     }
   } catch (err) {
