@@ -1364,7 +1364,7 @@ renderTutorDashboard();
       if (subjects.length === 1) subjectSelect.value = subjects[0];
     }
 
-    document.getElementById("save-appointment").onclick = () => {
+    document.getElementById("save-appointment").onclick = async () => {
       const studentId = Number(document.getElementById("student-select").value);
       const subject = document.getElementById("appointment-subject").value;
       const date = document.getElementById("appointment-date").value;
@@ -1386,27 +1386,43 @@ renderTutorDashboard();
         alert(`${studentFullName(student)} hat nicht genügend Einheiten übrig. Verbleibend: ${student.remainingUnits}`);
         return;
       }
+      const { error } = await supabaseClient
+  .from("appointments")
+  .insert({
+    student_id: studentId,
+    tutor_username: currentUser.username,
+    subject: subject,
+    date: date,
+    time: time,
+    units: units
+  });
 
-      const newAppointment = {
-        id: nextAppointmentId++,
-        student: studentId,
-        tutor: currentUser.username,
-        subject,
-        date,
-        time,
-        units,
-        report: "",
-        reportStatus: "pending"
-      };
+if (error) {
+  console.error("Fehler beim Speichern des Termins:", error);
+  alert("Termin konnte nicht gespeichert werden.");
+  return;
+}
 
-      appointments.push(newAppointment);
-      student.remainingUnits -= units;
+// Schülerstunden aktualisieren
+const { error: updateError } = await supabaseClient
+  .from("students")
+  .update({
+    remaining_units: student.remainingUnits - units
+  })
+  .eq("id", studentId);
 
-      saveState();
-      appointmentModal.classList.add("hidden");
+if (updateError) {
+  console.error("Fehler beim Aktualisieren der Einheiten:", updateError);
+}
 
-      renderTutorDashboard();
-      if (managerDashboard && !managerDashboard.classList.contains("hidden")) renderManagerDashboard();
+await loadStudents();
+appointmentModal.classList.add("hidden");
+
+if (currentUser.role === "manager") renderManagerDashboard();
+if (currentUser.role === "tutor") renderTutorDashboard();
+
+return;
+
     };
 
     // =========================
