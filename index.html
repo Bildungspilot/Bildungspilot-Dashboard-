@@ -1175,7 +1175,7 @@ renderTutorDashboard();
 
           showConfirmDeleteModal({
             kind: "student",
-            id: studentId,
+            id: String(studentId),
             message: `Möchtest du den Schüler “${s ? studentFullName(s) : ""}” wirklich löschen? Alle zugehörigen Termine werden ebenfalls gelöscht.`
           });
         };
