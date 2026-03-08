@@ -1530,29 +1530,35 @@ return;
       reportViewModal.classList.remove("hidden");
     }
 
-    document.getElementById("save-report-edit").onclick = () => {
-      const report = document.getElementById("report-edit-content").value;
+    document.getElementById("save-report-edit").onclick = async () => {
+  const report = document.getElementById("report-edit-content").value.trim();
 
-      if (!report.trim()) {
-        alert("Bitte gib einen Bericht ein.");
-        return;
-      }
+  if (!report) {
+    alert("Bitte gib einen Bericht ein.");
+    return;
+  }
 
-      const appointment = appointments.find(a => a.id === currentAppointmentId);
-      if (!appointment) return;
+  const { error } = await supabaseClient
+    .from("appointments")
+    .update({
+      report: report,
+      report_status: "completed"
+    })
+    .eq("id", currentAppointmentId);
 
-      appointment.report = report;
-      appointment.reportStatus = "completed";
+  if (error) {
+    console.error("Fehler beim Speichern des Berichts:", error);
+    alert("Bericht konnte nicht gespeichert werden.");
+    return;
+  }
 
-      saveState();
-      reportEditModal.classList.add("hidden");
+  await loadAppointments();
+  reportEditModal.classList.add("hidden");
 
-      if (currentUser.role === "tutor") {
-        renderTutorDashboard();
-      } else {
-        renderManagerDashboard();
-      }
-    };
+  if (currentUser.role === "tutor") renderTutorDashboard();
+  if (currentUser.role === "manager") renderManagerDashboard();
+  if (managerDashboard && !managerDashboard.classList.contains("hidden")) renderManagerDashboard();
+};
 
     // =========================
     // Manager FAB + Add Student/Tutor
