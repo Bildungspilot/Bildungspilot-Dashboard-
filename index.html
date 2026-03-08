@@ -1122,8 +1122,8 @@ renderTutorDashboard();
       });
 
       tableBody.querySelectorAll(".view-report").forEach(btn => {
-        btn.onclick = (e) => showReportViewModal(String(e.target.dataset.id));
-      });
+  btn.onclick = (e) => showReportViewModal(String(e.target.dataset.id));
+});
     }
 
     function renderStudentsManagementTable() {
@@ -1515,10 +1515,10 @@ return;
     }
 
     function showReportViewModal(appointmentId) {
-      const appointment = appointments.find(a => a.id === appointmentId);
+      const appointment = appointments.find(a => String(a.id) === String(appointmentId));
       if (!appointment) return;
 
-      const student = students.find(s => s.id === appointment.student);
+      const student = students.find(s => String(s.id) === String(appointment.student));
       const tutor = users[appointment.tutor];
 
       document.getElementById("report-view-student").textContent = student ? studentFullName(student) : "—";
