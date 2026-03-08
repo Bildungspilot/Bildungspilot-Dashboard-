@@ -1339,9 +1339,9 @@ renderTutorDashboard();
     document.getElementById("cancel-appointment").onclick = () => appointmentModal.classList.add("hidden");
 
     document.getElementById("student-select").onchange = (e) => {
-      const studentId = Number(e.target.value);
-      populateAppointmentSubjectOptions(studentId);
-    };
+  const studentId = String(e.target.value);
+  populateAppointmentSubjectOptions(studentId);
+};
 
     function showAppointmentModal(studentId = null) {
       const studentSelect = document.getElementById("student-select");
@@ -1375,8 +1375,8 @@ renderTutorDashboard();
       document.getElementById("appointment-units").value = "1";
 
       // Initialize subject options based on selected student
-      const selectedStudentId = Number(studentSelect.value || 0);
-      populateAppointmentSubjectOptions(selectedStudentId);
+      const selectedStudentId = String(studentSelect.value || "");
+populateAppointmentSubjectOptions(selectedStudentId);
 
       appointmentModal.classList.remove("hidden");
     }
@@ -1406,7 +1406,7 @@ renderTutorDashboard();
 
 
     document.getElementById("save-appointment").onclick = async () => {
-      const studentId = Number(document.getElementById("student-select").value);
+      const studentId = String(document.getElementById("student-select").value);
       const subject = document.getElementById("appointment-subject").value;
       const date = document.getElementById("appointment-date").value;
       const time = document.getElementById("appointment-time").value;
@@ -1417,7 +1417,7 @@ renderTutorDashboard();
         return;
       }
 
-      const student = students.find(s => s.id === studentId);
+      const student = students.find(s => String(s.id) === String(studentId));
       if (!student) {
         alert("Schüler nicht gefunden.");
         return;
