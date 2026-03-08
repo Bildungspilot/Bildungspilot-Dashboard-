@@ -863,7 +863,8 @@ async function loadStudents() {
     tutor: s.tutor_username,
     remainingUnits: Number(s.remaining_units || 0),
     deadline: s.deadline || "",
-    subject: s.subjects || ""
+    subject: s.subjects || "",
+subjects: (s.subjects || "").split(",").map(x => x.trim()).filter(Boolean)
   }));
 }
 
@@ -1352,7 +1353,7 @@ renderTutorDashboard();
         const option = document.createElement("option");
         option.value = student.id;
         const subjectsLabel = (student.subjects || []).join(", ") || "—";
-        const deadlineLabel = formatDateISOToDE(student.deadlineISO);
+        const deadlineLabel = formatDateISOToDE(student.deadline);
         option.textContent = `${studentFullName(student)} (${subjectsLabel}, ${student.remainingUnits} Einheiten, Frist: ${deadlineLabel})`;
         studentSelect.appendChild(option);
       });
@@ -1380,24 +1381,29 @@ renderTutorDashboard();
       appointmentModal.classList.remove("hidden");
     }
 
-    function populateAppointmentSubjectOptions(studentId) {
-      const subjectSelect = document.getElementById("appointment-subject");
-      subjectSelect.innerHTML = '<option value="">Bitte wählen</option>';
+   function populateAppointmentSubjectOptions(studentId) {
+  const subjectSelect = document.getElementById("appointment-subject");
+  subjectSelect.innerHTML = '<option value="">Bitte wählen</option>';
 
-      if (!studentId) return;
+  const student = students.find(s => String(s.id) === String(studentId));
+  if (!student) return;
 
-      const student = students.find(s => s.id === studentId);
-      const subjects = (student && Array.isArray(student.subjects)) ? student.subjects : [];
+  const subjects = Array.isArray(student.subjects)
+    ? student.subjects
+    : (student.subject ? String(student.subject).split(",").map(x => x.trim()).filter(Boolean) : []);
 
-      subjects.forEach(sub => {
-        const option = document.createElement("option");
-        option.value = sub;
-        option.textContent = sub;
-        subjectSelect.appendChild(option);
-      });
+  subjects.forEach(sub => {
+    const option = document.createElement("option");
+    option.value = sub;
+    option.textContent = sub;
+    subjectSelect.appendChild(option);
+  });
+ if (subjects.length === 1) {
+    subjectSelect.value = subjects[0];
+  }
+ 
+}
 
-      if (subjects.length === 1) subjectSelect.value = subjects[0];
-    }
 
     document.getElementById("save-appointment").onclick = async () => {
       const studentId = Number(document.getElementById("student-select").value);
