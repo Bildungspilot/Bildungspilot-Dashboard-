@@ -1685,7 +1685,7 @@ const { error } = await supabaseClient
     tutor_username: tutor,
     remaining_units: units,
     deadline: deadlineISO,
-    subjects: selectedSubjects.join(", ")
+    subjects: allSubjects.join(", ")
   });
 
 if (error) {
