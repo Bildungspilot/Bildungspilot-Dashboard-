@@ -1660,8 +1660,20 @@ return;
   document.querySelectorAll("#subject-grid input[type='checkbox']:checked")
 ).map(cb => cb.value);
 
-if (selectedSubjects.length === 0) {
-  alert("Bitte mindestens ein Fach auswählen.");
+const customSubjectInput = document.getElementById("student-custom-subject");
+const customSubject = customSubjectInput ? customSubjectInput.value.trim() : "";
+
+let allSubjects = [...selectedSubjects];
+
+if (customSubject) {
+  allSubjects.push(customSubject);
+}
+
+// doppelte Einträge entfernen
+allSubjects = Array.from(new Set(allSubjects.map(x => x.trim()).filter(Boolean)));
+
+if (allSubjects.length === 0) {
+  alert("Bitte mindestens ein Fach auswählen oder eingeben.");
   return;
 }
 
