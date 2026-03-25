@@ -1335,10 +1335,14 @@ renderTutorDashboard();
           <td class="px-6 py-4 whitespace-nowrap text-sm">
             ${app.reportStatus === "completed"
               ? `<div class="flex space-x-2">
-                  <button class="text-indigo-600 hover:text-indigo-900 view-report" data-id="${app.id}">Ansehen</button>
-                  <button class="text-green-600 hover:text-green-900 edit-report" data-id="${app.id}">Bearbeiten</button>
-                </div>`
-              : `<button class="text-green-600 hover:text-green-900 add-report" data-id="${app.id}">Bericht hinzufügen</button>`
+        <button class="text-indigo-600 hover:text-indigo-900 view-report" data-id="${app.id}">Ansehen</button>
+        <button class="text-green-600 hover:text-green-900 edit-report" data-id="${app.id}">Bearbeiten</button>
+        <button class="text-red-600 hover:text-red-800 delete-appointment" data-id="${app.id}">Löschen</button>
+      </div>`
+    : `<div class="flex space-x-2">
+        <button class="text-green-600 hover:text-green-900 add-report" data-id="${app.id}">Bericht hinzufügen</button>
+        <button class="text-red-600 hover:text-red-800 delete-appointment" data-id="${app.id}">Löschen</button>
+      </div>`
             }
           </td>
         `;
@@ -1352,6 +1356,12 @@ renderTutorDashboard();
       tbody.querySelectorAll(".edit-report, .add-report").forEach(btn => {
         btn.onclick = (e) => showReportEditModal(String(e.target.dataset.id));
       });
+      tbody.querySelectorAll(".delete-appointment").forEach(btn => {
+  btn.onclick = (e) => {
+    const appointmentId = e.target.dataset.id;
+    deleteAppointment(appointmentId);
+  };
+});
     }
 
     // =========================
@@ -1783,7 +1793,43 @@ return;
     alert("Termine konnten nicht gelöscht werden.");
     return;
   }
+async function deleteAppointment(appointmentId) {
+  const appointment = appointments.find(a => String(a.id) === String(appointmentId));
+  if (!appointment) return;
 
+  const student = students.find(s => String(s.id) === String(appointment.student));
+  if (!student) return;
+
+  const newUnits = student.remainingUnits + appointment.units;
+
+  const { error: updateError } = await supabaseClient
+    .from("students")
+    .update({ remaining_units: newUnits })
+    .eq("id", student.id);
+
+  if (updateError) {
+    console.error("Fehler beim Zurückgeben der Einheiten:", updateError);
+    alert("Fehler beim Wiederherstellen der Einheiten.");
+    return;
+  }
+
+  const { error: deleteError } = await supabaseClient
+    .from("appointments")
+    .delete()
+    .eq("id", appointmentId);
+
+  if (deleteError) {
+    console.error("Fehler beim Löschen:", deleteError);
+    alert("Termin konnte nicht gelöscht werden.");
+    return;
+  }
+
+  await loadStudents();
+  await loadAppointments();
+
+  if (currentUser.role === "tutor") renderTutorDashboard();
+  if (currentUser.role === "manager") renderManagerDashboard();
+}
   const { error } = await supabaseClient
     .from("students")
     .delete()
