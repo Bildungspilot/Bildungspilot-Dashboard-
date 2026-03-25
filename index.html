@@ -1303,18 +1303,15 @@ renderTutorDashboard();
         btn.onclick = (e) => showAppointmentModal(String(e.target.dataset.id));
       });
     }
-
-    // =========================
+// =========================
 // Tabelle rendern (Tutor & Manager)
 // =========================
 function renderAppointmentsTable() {
-  // Wähle die richtige Tabelle
   const tbody = document.getElementById(
     currentUser.role === "manager" ? "manager-appointments-table" : "tutor-appointments-table"
   );
   tbody.innerHTML = "";
 
-  // Filtere Termine je nach Rolle
   const userAppointments = appointments
     .filter(a => currentUser.role === "manager" || a.tutor === currentUser.username)
     .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
@@ -1367,7 +1364,7 @@ function renderAppointmentsTable() {
   });
 
   tbody.querySelectorAll(".edit-report, .add-report").forEach(btn => {
-    btn.onclick = e => showReportEditModal(String(e.target.dataset.id));
+    btn.onclick = e => showReportEditModal(Number(e.target.dataset.id));
   });
 
   tbody.querySelectorAll(".delete-appointment").forEach(btn => {
