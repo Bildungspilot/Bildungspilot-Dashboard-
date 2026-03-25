@@ -1382,11 +1382,16 @@ renderTutorDashboard();
     alert("Termin konnte nicht gelöscht werden.");
     return;
   }
-
-  // Termin aus dem lokalen Array entfernen, damit Tabelle sofort aktualisiert wird
+// Lokal aus Array entfernen
   const index = appointments.findIndex(a => a.id == appointmentId);
-  if (index !== -1) appointments.splice(index, 1);
+if (index !== -1) {
+    // Stunden zurückaddieren, falls der Termin einem Schüler gehört
+    const studentId = appointments[index].student;
+    const student = students.find(s => s.id == studentId);
+    if (student) student.remainingUnits += appointments[index].units;
 
+    appointments.splice(index, 1); // Termin entfernen
+}
   // Tabelle neu rendern
   renderTutorAppointmentsTable();
 }
