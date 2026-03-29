@@ -679,8 +679,8 @@
     }
 
     let users = deepClone(SEED_USERS);
-    let students = deepClone(studentsSeed);
-    let appointments = deepClone(appointmentsSeed);
+    let students = [];
+    let appointments = [];
     let nextStudentId = 9;
     let nextAppointmentId = 5;
     console.log("Students:", students);
@@ -854,10 +854,12 @@ async function loadStudents() {
     .from("students")
     .select("*");
 
-  if (error) {
-    console.error("Fehler beim Laden der Schüler:", error);
-    return;
-  }
+  if (error || !data || data.length === 0) {
+  console.error("Fehler beim Laden der Schüler, benutze Fallback:", error);
+  students = deepClone(studentsSeed);
+  return;
+}
+
    students = (data || []).map(s => ({
     id: s.id,
     firstName: s.first_name,
@@ -1001,9 +1003,9 @@ async function loadAppointments() {
   const managerFab = document.getElementById("manager-fab");
   if (managerFab) managerFab.classList.remove("hidden");
 
-  // await loadTutors();
-  // await loadStudents();
-  // await loadAppointments();
+  await loadTutors();
+  await loadStudents();
+  await loadAppointments();
 
   renderManagerDashboard();
   
@@ -1011,9 +1013,9 @@ async function loadAppointments() {
   document.getElementById("tutor-name").textContent = user.fullName || user.name || "Tutor";
   tutorDashboard.classList.remove("hidden");
 
-  // await loadTutors();
-  // await loadStudents();
-  // await loadAppointments();
+  await loadTutors();
+  await loadStudents();
+  await loadAppointments();
 
   renderTutorDashboard();
 }
