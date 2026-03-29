@@ -683,6 +683,9 @@
     let appointments = deepClone(appointmentsSeed);
     let nextStudentId = 9;
     let nextAppointmentId = 5;
+    console.log("Students:", students);
+console.log("Appointments:", appointments);
+console.log("Users:", users);
 
     function loadState() {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -1077,63 +1080,6 @@ async function loadAppointments() {
       select.value = stillExists ? currentValue : "all";
     }
 
-    function renderAppointmentsTable(tutorFilter = "all") {
-      const tableBody = document.getElementById("appointments-table");
-      tableBody.innerHTML = "";
-
-      let filtered = appointments.slice();
-      if (tutorFilter !== "all") filtered = filtered.filter(a => a.tutor === tutorFilter);
-
-      // Sort newest first
-      filtered.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
-
-      if (filtered.length === 0) {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td class="px-6 py-6 text-sm text-gray-500" colspan="8">
-            Keine Termine gefunden.
-          </td>
-        `;
-        tableBody.appendChild(row);
-        return;
-      }
-
-      filtered.forEach(app => {
-        const student = students.find(s => s.id === app.student);
-        const tutor = users[app.tutor];
-
-        let statusBadge = app.reportStatus === "completed"
-          ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Abgeschlossen</span>'
-          : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Offen</span>';
-
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tutor ? (tutor.fullName || tutor.name) : app.tutor}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student ? studentFullName(student) : "—"}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.subject || "—"}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateISOToDE(app.date)}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.time} Uhr</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.units} (${app.units * 45} Min.)</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm">
-  <div class="flex space-x-2">
-    ${app.reportStatus === "completed"
-      ? `<button class="text-indigo-600 hover:text-indigo-900 view-report" data-id="${app.id}">Bericht ansehen</button>`
-      : '<span class="text-gray-500">Noch kein Bericht</span>'}
-    
-    <button class="text-red-600 hover:text-red-800 delete-appointment" data-id="${app.id}">
-      Löschen
-    </button>
-  </div>
-</td>
-        `;
-        tableBody.appendChild(row);
-      });
-
-      tableBody.querySelectorAll(".view-report").forEach(btn => {
-  btn.onclick = (e) => showReportViewModal(String(e.target.dataset.id));
-});
-}
     function renderStudentsManagementTable() {
       const tbody = document.getElementById("students-hours-table");
       tbody.innerHTML = "";
