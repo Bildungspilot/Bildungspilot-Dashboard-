@@ -1375,28 +1375,113 @@ function renderAppointmentsTable() {
 // =========================
 // Termin löschen
 // =========================
-function deleteAppointment(appointmentId) {
-  const index = appointments.findIndex(a => a.id === appointmentId);
-  if (index === -1) return;
+function renderAppointmentsTable(tutorFilter = "all") {
+  const tbody = document.getElementById(
+    currentUser.role === "manager" ? "manager-appointments-table" : "tutor-appointments-table"
+  );
+  tbody.innerHTML = "";
 
-  // Stunden zurückrechnen
-  const studentId = appointments[index].student;
-  const student = students.find(s => s.id === studentId);
-  if (student) student.remainingUnits += appointments[index].units;
+  let userAppointments = appointments.filter(a =>
+    currentUser.role === "manager" || a.tutor === currentUser.username
+  );
 
-  // Termin aus Array löschen
-  appointments.splice(index, 1);
+  if (currentUser.role === "manager" && tutorFilter !== "all") {
+    userAppointments = userAppointments.filter(a => a.tutor === tutorFilter);
+  }
 
-  // Tabelle neu rendern
-  renderAppointmentsTable();
+  userAppointments.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+
+  if (userAppointments.length === 0) {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td class="px-6 py-6 text-sm text-gray-500" colspan="7">
+        Noch keine Termine eingetragen.
+      </td>
+    `;
+    tbody.appendChild(row);
+    return;
+  }
+
+  userAppointments.forEach(app => {
+    const student = students.find(s => s.id === app.student);
+
+    const statusBadge = app.reportStatus === "completed"
+      ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Abgeschlossen</span>'
+      : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Offen</span>';
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student ? studentFullName(student) : "—"}</td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.subject || "—"}</td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateISOToDE(app.date)}</td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.time} Uhr</td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.units} (${app.units * 45} Min.)</td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm">
+        <div class="flex space-x-2">
+          ${app.reportStatus === "completed"
+            ? `<button class="text-indigo-600 hover:text-indigo-900 view-report" data-id="${app.id}">Ansehen</button>
+               <button class="text-green-600 hover:text-green-900 edit-report" data-id="${app.id}">Bearbeiten</button>`
+            : `<button class="text-green-600 hover:text-green-900 add-report" data-id="${app.id}">Bericht hinzufügen</button>`
+          }
+          <button class="text-red-600 hover:text-red-800 delete-appointment" data-id="${app.id}">Löschen</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  tbody.querySelectorAll(".view-report").forEach(btn => {
+    btn.onclick = e => showReportViewModal(Number(e.currentTarget.dataset.id));
+  });
+
+  tbody.querySelectorAll(".edit-report, .add-report").forEach(btn => {
+    btn.onclick = e => showReportEditModal(Number(e.currentTarget.dataset.id));
+  });
+
+  tbody.querySelectorAll(".delete-appointment").forEach(btn => {
+    btn.onclick = e => deleteAppointment(Number(e.currentTarget.dataset.id));
+  });
 }
-      tbody.querySelectorAll(".delete-appointment").forEach(btn => {
-  btn.onclick = (e) => {
-    const appointmentId = e.target.dataset.id;
-    deleteAppointment(appointmentId);
-  };
-});
+
+async function deleteAppointment(appointmentId) {
+  const appointment = appointments.find(a => Number(a.id) === Number(appointmentId));
+  if (!appointment) return;
+
+  const student = students.find(s => Number(s.id) === Number(appointment.student));
+
+  if (student) {
+    const { error: updateError } = await supabaseClient
+      .from("students")
+      .update({
+        remaining_units: student.remainingUnits + Number(appointment.units || 0)
+      })
+      .eq("id", student.id);
+
+    if (updateError) {
+      console.error("Fehler beim Zurückgeben der Einheiten:", updateError);
+      alert("Fehler beim Wiederherstellen der Einheiten.");
+      return;
     }
+  }
+
+  const { error: deleteError } = await supabaseClient
+    .from("appointments")
+    .delete()
+    .eq("id", appointmentId);
+
+  if (deleteError) {
+    console.error("Fehler beim Löschen des Termins:", deleteError);
+    alert("Termin konnte nicht gelöscht werden.");
+    return;
+  }
+
+  await loadStudents();
+  await loadAppointments();
+
+  if (currentUser.role === "tutor") renderTutorDashboard();
+  if (currentUser.role === "manager") renderManagerDashboard();
+}
 
     // =========================
     // Appointment modal logic (Tutor)
@@ -1846,7 +1931,7 @@ async function deleteAppointment(appointmentId) {
     alert("Fehler beim Wiederherstellen der Einheiten.");
     return;
   }
-
+  
   const { error: deleteError } = await supabaseClient
     .from("appointments")
     .delete()
