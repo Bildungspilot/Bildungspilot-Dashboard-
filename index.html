@@ -1254,9 +1254,15 @@ async function loadAppointments() {
     }
 
 function renderAppointmentsTable(tutorFilter = "all") {
-  const tbody = document.getElementById(
-    currentUser.role === "manager" ? "manager-appointments-table" : "tutor-appointments-table"
-  );
+  const tbody =
+  document.getElementById("appointments-table") ||
+  document.getElementById("manager-appointments-table") ||
+  document.getElementById("tutor-appointments-table");
+
+if (!tbody) {
+  console.error("❌ KEIN TABLE BODY GEFUNDEN!");
+  return;
+}
   tbody.innerHTML = "";
 
   let userAppointments = appointments.filter(a =>
