@@ -992,25 +992,28 @@ async function loadAppointments() {
     loginScreen.classList.add("hidden");
 
     if (role === "manager") {
-      document.getElementById("manager-name").textContent = user.fullName || user.name || "Admin";
-      managerDashboard.classList.remove("hidden");
+  document.getElementById("manager-name").textContent = user.fullName || user.name || "Admin";
+  managerDashboard.classList.remove("hidden");
 
-      const managerFab = document.getElementById("manager-fab");
-      if (managerFab) managerFab.classList.remove("hidden");
+  const managerFab = document.getElementById("manager-fab");
+  if (managerFab) managerFab.classList.remove("hidden");
 
-      await loadTutors();
-await loadStudents();
-await loadAppointments();
-renderManagerDashboard();
-      
-    } else {
-      document.getElementById("tutor-name").textContent = user.fullName || user.name || "Tutor";
-      tutorDashboard.classList.remove("hidden");
-      await loadTutors();
-await loadStudents();
-await loadAppointments();
-renderTutorDashboard();
-    }
+  // await loadTutors();
+  // await loadStudents();
+  // await loadAppointments();
+
+  renderManagerDashboard();
+  
+} else {
+  document.getElementById("tutor-name").textContent = user.fullName || user.name || "Tutor";
+  tutorDashboard.classList.remove("hidden");
+
+  // await loadTutors();
+  // await loadStudents();
+  // await loadAppointments();
+
+  renderTutorDashboard();
+}
   } catch (err) {
     console.error("Harter Login-Fehler:", err);
     loginError.textContent = "Technischer Fehler beim Login.";
