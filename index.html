@@ -1186,6 +1186,9 @@ async function loadAppointments() {
 
       renderTutorStudentsTable();
       renderAppointmentsTable();
+      
+      console.log("Tutor username:", currentUser.username);
+      console.log("Alle appointments:", appointments);
     }
 
     function renderTutorStudentsTable() {
@@ -1237,17 +1240,27 @@ async function loadAppointments() {
     }
 
 function renderAppointmentsTable(tutorFilter = "all") {
-  const tbody =
-  document.getElementById("appointments-table") ||
-  document.getElementById("manager-appointments-table") ||
-  document.getElementById("tutor-appointments-table");
+  let tbody;
+
+if (currentUser.role === "manager") {
+  tbody =
+    document.getElementById("appointments-table") ||
+    document.getElementById("manager-appointments-table");
+} else {
+  tbody = document.getElementById("tutor-appointments-table");
+}
+
+if (!tbody) {
+  console.error("❌ KEIN TABLE BODY GEFUNDEN!");
+  return;
+}
 
 if (!tbody) {
   console.error("❌ KEIN TABLE BODY GEFUNDEN!");
   return;
 }
   tbody.innerHTML = "";
-
+  console.log("Aktuelle Termine:", appointments);
   let userAppointments = appointments.filter(a =>
     currentUser.role === "manager" || a.tutor === currentUser.username
   );
