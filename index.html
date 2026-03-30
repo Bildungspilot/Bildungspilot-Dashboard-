@@ -655,25 +655,6 @@
       tutor5: { username: "tutor5", password: "tutor5", role: "tutor", name: "Thomas", fullName: "Thomas" }
     };
 
-    // NOTE: deadlineISO is stored as YYYY-MM-DD (easy to compare/format)
-    let studentsSeed = [
-      { id: 1, firstName: "Max", lastName: "Müller", tutor: "tutor1", subjects: ["Mathematik"], remainingUnits: 10, deadlineISO: "2026-06-30" },
-      { id: 2, firstName: "Lisa", lastName: "Schmidt", tutor: "tutor1", subjects: ["Deutsch"], remainingUnits: 8, deadlineISO: "2026-05-31" },
-      { id: 3, firstName: "Tim", lastName: "Schulz", tutor: "tutor2", subjects: ["Englisch"], remainingUnits: 12, deadlineISO: "2026-07-15" },
-      { id: 4, firstName: "Sarah", lastName: "Weber", tutor: "tutor2", subjects: ["Physik", "Mathematik"], remainingUnits: 6, deadlineISO: "2026-04-30" },
-      { id: 5, firstName: "Jan", lastName: "Becker", tutor: "tutor3", subjects: ["Chemie"], remainingUnits: 15, deadlineISO: "2026-09-30" },
-      { id: 6, firstName: "Laura", lastName: "Meyer", tutor: "tutor4", subjects: ["Biologie"], remainingUnits: 9, deadlineISO: "2026-08-31" },
-      { id: 7, firstName: "Felix", lastName: "Hoffmann", tutor: "tutor5", subjects: ["Geschichte"], remainingUnits: 7, deadlineISO: "2026-12-31" },
-      { id: 8, firstName: "Emma", lastName: "Klein", tutor: "tutor3", subjects: ["Informatik", "Mathematik", "Physik"], remainingUnits: 11, deadlineISO: "2026-10-31" }
-    ];
-
-    let appointmentsSeed = [
-      { id: 1, student: 1, tutor: "tutor1", subject: "Mathematik", date: "2026-03-01", time: "14:30", units: 1, report: "Max hat heute gut mitgearbeitet. Wir haben Gleichungen geübt.", reportStatus: "completed" },
-      { id: 2, student: 3, tutor: "tutor2", subject: "Englisch", date: "2026-03-02", time: "16:00", units: 2, report: "Tim hat Fortschritte in der englischen Grammatik gemacht.", reportStatus: "completed" },
-      { id: 3, student: 5, tutor: "tutor3", subject: "Chemie", date: "2026-03-03", time: "15:00", units: 1, report: "", reportStatus: "pending" },
-      { id: 4, student: 2, tutor: "tutor1", subject: "Deutsch", date: "2026-03-04", time: "13:00", units: 1, report: "Lisa hat einen Aufsatz geschrieben und wir haben ihn korrigiert.", reportStatus: "completed" }
-    ];
-
     function deepClone(obj) {
       return JSON.parse(JSON.stringify(obj));
     }
@@ -919,7 +900,7 @@ async function loadAppointments() {
   appointments = (data || []).map(a => ({
     id: a.id,
     student: a.student_id,
-    tutor: a.tutor_username,
+    tutor: String(a.tutor_username).trim(),
     subject: a.subject || "",
     date: a.date,
     time: a.time,
@@ -1310,7 +1291,9 @@ if (!tbody) {
                <button class="text-green-600 hover:text-green-900 edit-report" data-id="${app.id}">Bearbeiten</button>`
             : `<button class="text-green-600 hover:text-green-900 add-report" data-id="${app.id}">Bericht hinzufügen</button>`
           }
-          <button class="text-red-600 hover:text-red-800 delete-appointment" data-id="${app.id}">Löschen</button>
+          <button onclick="deleteAppointment('${a.id}', ${a.units}, '${a.student}')">
+  Löschen
+</button>
         </div>
       </td>
     `;
@@ -1379,6 +1362,30 @@ async function deleteAppointment(appointmentId) {
   const studentId = String(e.target.value);
   populateAppointmentSubjectOptions(studentId);
 };
+    async function deleteAppointment(id, units, studentId) {
+  console.log("Lösche Termin", id);
+
+  // 1. Termin löschen
+  const { error } = await supabaseClient
+    .from("appointments")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Fehler beim Löschen:", error);
+    return;
+  }
+
+  // 2. Einheiten zurückgeben
+  await supabaseClient.rpc("add_units_back", {
+    student_id_input: studentId,
+    units_input: units
+  });
+
+  // 3. neu laden
+  await loadAppointments();
+  renderManagerDashboard();
+}
 
     function showAppointmentModal(studentId = null) {
       const studentSelect = document.getElementById("student-select");
