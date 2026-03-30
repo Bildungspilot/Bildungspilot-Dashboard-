@@ -1377,30 +1377,7 @@ async function deleteAppointment(appointmentId) {
   const studentId = String(e.target.value);
   populateAppointmentSubjectOptions(studentId);
 };
-    async function deleteAppointment(id, units, studentId) {
-  console.log("Lösche Termin", id);
-
-  // 1. Termin löschen
-  const { error } = await supabaseClient
-    .from("appointments")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    console.error("Fehler beim Löschen:", error);
-    return;
-  }
-
-  // 2. Einheiten zurückgeben
-  await supabaseClient.rpc("add_units_back", {
-    student_id_input: studentId,
-    units_input: units
-  });
-
-  // 3. neu laden
-  await loadAppointments();
-  renderManagerDashboard();
-}
+   
 
     function showAppointmentModal(studentId = null) {
       const studentSelect = document.getElementById("student-select");
@@ -1818,25 +1795,6 @@ return;
   if (appointmentDeleteError) {
     console.error("Fehler beim Löschen der Termine:", appointmentDeleteError);
     alert("Termine konnten nicht gelöscht werden.");
-    return;
-  }
-async function deleteAppointment(appointmentId) {
-  const appointment = appointments.find(a => String(a.id) === String(appointmentId));
-  if (!appointment) return;
-
-  const student = students.find(s => String(s.id) === String(appointment.student));
-  if (!student) return;
-
-  const newUnits = student.remainingUnits + appointment.units;
-
-  const { error: updateError } = await supabaseClient
-    .from("students")
-    .update({ remaining_units: newUnits })
-    .eq("id", student.id);
-
-  if (updateError) {
-    console.error("Fehler beim Zurückgeben der Einheiten:", updateError);
-    alert("Fehler beim Wiederherstellen der Einheiten.");
     return;
   }
   
