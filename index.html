@@ -1411,23 +1411,45 @@ function renderAppointmentsTable(tutorFilter = "all") {
 
 async function deleteAppointment(appointmentId) {
   const appointment = appointments.find(a => Number(a.id) === Number(appointmentId));
-  if (!appointment) return;
+
+  if (!appointment) {
+    alert("Termin nicht gefunden.");
+    console.error("deleteAppointment: Termin nicht im lokalen Array gefunden", {
+      appointmentId,
+      appointments
+    });
+    return;
+  }
 
   const student = students.find(s => String(s.id) === String(appointment.student));
 
   if (student) {
-    await supabaseClient
+    const newUnits = Number(student.remainingUnits || 0) + Number(appointment.units || 0);
+
+    const { error: updateError } = await supabaseClient
       .from("students")
       .update({
-        remaining_units: student.remainingUnits + Number(appointment.units || 0)
+        remaining_units: newUnits
       })
       .eq("id", student.id);
+
+    if (updateError) {
+      console.error("Fehler beim Zurückbuchen der Einheiten:", updateError);
+      alert("Die Einheiten konnten nicht zurückgebucht werden.");
+      return;
+    }
   }
 
-  await supabaseClient
+  const { error: deleteError } = await supabaseClient
     .from("appointments")
     .delete()
     .eq("id", appointmentId);
+
+  if (deleteError) {
+    console.error("Fehler beim Löschen des Termins:", deleteError);
+    alert("Der Termin konnte nicht gelöscht werden.");
+    return;
+  }
 
   await loadStudents();
   await loadAppointments();
