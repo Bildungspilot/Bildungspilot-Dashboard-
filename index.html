@@ -1291,7 +1291,9 @@ if (!tbody) {
                <button class="text-green-600 hover:text-green-900 edit-report" data-id="${app.id}">Bearbeiten</button>`
             : `<button class="text-green-600 hover:text-green-900 add-report" data-id="${app.id}">Bericht hinzufügen</button>`
           }
-          <button onclick="deleteAppointment('${a.id}', ${a.units}, '${a.student}')">
+          <button class="delete-appointment" data-id="${app.id}">
+  Löschen
+</button>
   Löschen
 </button>
         </div>
@@ -1317,7 +1319,7 @@ async function deleteAppointment(appointmentId) {
   const appointment = appointments.find(a => Number(a.id) === Number(appointmentId));
   if (!appointment) return;
 
-  const student = students.find(s => Number(s.id) === Number(appointment.student));
+  const student = students.find(s => String(s.id) === String(appointment.student));
 
   if (student) {
     const { error: updateError } = await supabaseClient
