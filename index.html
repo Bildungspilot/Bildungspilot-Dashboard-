@@ -1829,16 +1829,22 @@ return;
     // =========================
     // Delete confirmation
     // =========================
-    document.getElementById("close-confirm-delete-modal").onclick = () => confirmDeleteModal.classList.add("hidden");
-    document.getElementById("cancel-confirm-delete").onclick = () => confirmDeleteModal.classList.add("hidden");
+    
+document.getElementById("close-confirm-delete-modal").onclick = () => {
+  confirmDeleteModal.classList.add("hidden");
+};
 
-    function showConfirmDeleteModal({ kind, id, message }) {
-      pendingDelete = { kind, id };
-      document.getElementById("confirm-delete-text").textContent = message;
-      confirmDeleteModal.classList.remove("hidden");
-    }
+document.getElementById("cancel-confirm-delete").onclick = () => {
+  confirmDeleteModal.classList.add("hidden");
+};
 
-    document.getElementById("confirm-delete-btn").onclick = async () => {
+function showConfirmDeleteModal({ kind, id, message }) {
+  pendingDelete = { kind, id };
+  document.getElementById("confirm-delete-text").textContent = message;
+  confirmDeleteModal.classList.remove("hidden");
+}
+
+document.getElementById("confirm-delete-btn").onclick = async () => {
   if (!pendingDelete) return;
 
   if (pendingDelete.kind === "student") {
@@ -1856,15 +1862,7 @@ return;
   if (currentUser && currentUser.role === "tutor") renderTutorDashboard();
 };
 
-      pendingDelete = null;
-      confirmDeleteModal.classList.add("hidden");
-
-      // Refresh UI if active
-      if (currentUser && currentUser.role === "manager") renderManagerDashboard();
-      if (currentUser && currentUser.role === "tutor") renderTutorDashboard();
-    };
-
-    async function deleteStudentById(studentId) {
+async function deleteStudentById(studentId) {
   const { error: appointmentDeleteError } = await supabaseClient
     .from("appointments")
     .delete()
@@ -1894,7 +1892,7 @@ return;
   if (currentUser.role === "tutor") renderTutorDashboard();
 }
 
-    async function deleteTutorByUsername(username) {
+async function deleteTutorByUsername(username) {
   const { error: appointmentDeleteError } = await supabaseClient
     .from("appointments")
     .delete()
@@ -1934,11 +1932,10 @@ return;
 
   if (currentUser.role === "manager") renderManagerDashboard();
 }
-
     // =========================
-    // Initialize manager FAB visibility safety
-    // =========================
-    hideFabMenu();
-  </script>
+// Initialize manager FAB visibility safety
+// =========================
+hideFabMenu();
+</script>
 </body>
 </html>
