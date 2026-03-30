@@ -1397,20 +1397,20 @@ function renderAppointmentsTable(tutorFilter = "all") {
   });
 
   tbody.querySelectorAll(".delete-appointment").forEach(btn => {
-    btn.onclick = (e) => {
-      const appointmentId = Number(e.currentTarget.dataset.id);
+  btn.onclick = (e) => {
+    const appointmentId = String(e.currentTarget.dataset.id);
 
-      showConfirmDeleteModal({
-        kind: "appointment",
-        id: String(appointmentId),
-        message: `Möchtest du diesen Termin wirklich löschen?`
-      });
-    };
-  });
+    showConfirmDeleteModal({
+      kind: "appointment",
+      id: appointmentId,
+      message: `Möchtest du diesen Termin wirklich löschen?`
+    });
+  };
+});
 }
 
 async function deleteAppointment(appointmentId) {
-  const appointment = appointments.find(a => Number(a.id) === Number(appointmentId));
+  const appointment = appointments.find(a => String(a.id) === String(appointmentId));
 
   if (!appointment) {
     alert("Termin nicht gefunden.");
@@ -1874,8 +1874,8 @@ document.getElementById("confirm-delete-btn").onclick = async () => {
   } else if (pendingDelete.kind === "tutor") {
     await deleteTutorByUsername(String(pendingDelete.id));
   } else if (pendingDelete.kind === "appointment") {
-    await deleteAppointment(Number(pendingDelete.id));
-  }
+  await deleteAppointment(String(pendingDelete.id));
+}
 
   pendingDelete = null;
   confirmDeleteModal.classList.add("hidden");
