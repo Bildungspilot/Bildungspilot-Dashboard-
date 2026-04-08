@@ -1341,7 +1341,7 @@ function renderAppointmentsTable(tutorFilter = "all") {
   if (userAppointments.length === 0) {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td class="px-6 py-6 text-sm text-gray-500" colspan="8">
+      <td class="px-6 py-6 text-sm text-gray-500" colspan="${currentUser.role === "manager" ? 8 : 7}">
         Noch keine Termine eingetragen.
       </td>
     `;
@@ -1356,6 +1356,40 @@ function renderAppointmentsTable(tutorFilter = "all") {
       ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Abgeschlossen</span>'
       : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Offen</span>';
 
+    const reportButtons = app.reportStatus === "completed"
+      ? `
+        <button class="text-indigo-600 hover:text-indigo-900 view-report" data-id="${app.id}">
+          Ansehen
+        </button>
+        ${currentUser.role === "tutor" ? `
+          <button class="text-green-600 hover:text-green-900 edit-report" data-id="${app.id}">
+            Bearbeiten
+          </button>
+        ` : ""}
+      `
+      : `
+        ${currentUser.role === "tutor" ? `
+          <button class="text-green-600 hover:text-green-900 add-report" data-id="${app.id}">
+            Bericht hinzufügen
+          </button>
+        ` : `
+          <span class="text-gray-400">Kein Bericht</span>
+        `}
+      `;
+
+    const deleteButton = `
+      <button class="text-red-600 hover:text-red-800 delete-appointment" data-id="${app.id}">
+        Löschen
+      </button>
+    `;
+
+    const actionButtons = `
+      <div class="flex flex-wrap gap-2">
+        ${reportButtons}
+        ${deleteButton}
+      </div>
+    `;
+
     const row = document.createElement("tr");
 
     if (currentUser.role === "manager") {
@@ -1367,13 +1401,7 @@ function renderAppointmentsTable(tutorFilter = "all") {
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.time} Uhr</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.units} (${app.units * 45} Min.)</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm">
-          <div class="flex gap-2">
-            <button class="text-red-600 hover:text-red-800 delete-appointment" data-id="${app.id}">
-              Löschen
-            </button>
-          </div>
-        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">${actionButtons}</td>
       `;
     } else {
       row.innerHTML = `
@@ -1383,32 +1411,33 @@ function renderAppointmentsTable(tutorFilter = "all") {
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.time} Uhr</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${app.units} (${app.units * 45} Min.)</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm">
-          <div class="flex gap-2">
-            <button class="text-red-600 hover:text-red-800 delete-appointment" data-id="${app.id}">
-              Löschen
-            </button>
-          </div>
-        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">${actionButtons}</td>
       `;
     }
 
     tbody.appendChild(row);
   });
 
+  tbody.querySelectorAll(".view-report").forEach(btn => {
+    btn.onclick = e => showReportViewModal(String(e.currentTarget.dataset.id));
+  });
+
+  tbody.querySelectorAll(".edit-report, .add-report").forEach(btn => {
+    btn.onclick = e => showReportEditModal(String(e.currentTarget.dataset.id));
+  });
+
   tbody.querySelectorAll(".delete-appointment").forEach(btn => {
-  btn.onclick = (e) => {
-    const appointmentId = String(e.currentTarget.dataset.id);
+    btn.onclick = e => {
+      const appointmentId = String(e.currentTarget.dataset.id);
 
-    showConfirmDeleteModal({
-      kind: "appointment",
-      id: appointmentId,
-      message: `Möchtest du diesen Termin wirklich löschen?`
-    });
-  };
-});
+      showConfirmDeleteModal({
+        kind: "appointment",
+        id: appointmentId,
+        message: `Möchtest du diesen Termin wirklich löschen?`
+      });
+    };
+  });
 }
-
 async function deleteAppointment(appointmentId) {
   const appointment = appointments.find(a => String(a.id) === String(appointmentId));
 
